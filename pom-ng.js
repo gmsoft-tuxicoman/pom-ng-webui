@@ -95,10 +95,6 @@ pomng.registry.update = function() {
 				pomng.registry.classes = pomng.registry.nameMap(cls);
 				pomng.serials["classes"] = response[0].classes_serial;
 
-				if (pomng.registry.ui_need_init) {
-					pomng.registry.ui_need_init = false;
-					pomngUI.registry.init("#registry");
-				}
 			}
 			
 

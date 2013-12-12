@@ -24,9 +24,9 @@ pomngUI.menu.init = function () {
 	$("#menu #btn_config").click(function () { pomngUI.menu.hideAll(); $("#config").show(); });
 	$("#menu #btn_registry").click(function () {
 		if (pomngUI.registry.need_init)
-			pomngUI.registry.init();
+			pomngUI.registry.init("div#registry");
 		pomngUI.menu.hideAll();
-		$("#registry").show();
+		$("div#registry").show();
 	});
 
 
@@ -51,12 +51,13 @@ pomngUI.registry.init = function (id) {
 		if (avail_types.length > 0)
 			addButton = ' <span class="ui-icon ui-icon-circle-plus" id="btn_add_' + cls_name + '" style="display:inline-block" onclick="pomngUI.registry.dialogAddOpen(\'' + cls_name + '\')"/>';
 		$(id + " #registry").append('<span class="ui-icon ui-icon-triangle-1-e" style="display:inline-block"/>' + keys[i] + addButton + '<div id="' + keys[i] + '" class="ui-widget-content ui-corner-all" style="margin-left:16px"></div>');
+		pomngUI.registry.updateClass(id, cls_name);
 	}
 }
 
 pomngUI.registry.updateClass = function(id, cls) {
 
-	if (!pomngUI.registry.need_init)
+	if (pomngUI.registry.need_init)
 		return;
 
 	var inst_names = Object.keys(pomng.registry.classes[cls].instances).sort();
