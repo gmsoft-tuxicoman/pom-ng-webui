@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>POM-NG WebUI</title>
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+<link rel="stylesheet" href="pom-ng.css">
+<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
+<script src="https://raw.github.com/timheap/jquery-xmlrpc/master/jquery.xmlrpc.js"></script>
+<script src="pom-ng.js"></script>
+<script src="pom-ng-ui.js"></script>
+</head>
+<body>
+
+<div id="root">
+
+
+<h1>POM-NG WebUI !</h1>
+
+<div id="menu" class="ui-widget">
+<button type="button" id="btn_config">Configurations</button><br/>
+<button type="button" id="btn_registry">Registry</button>
+</div>
+
+<div id="config" class="ui-widget" style="float:left;display:none">Config comes here</div>
+<div id="registry" class="ui-widget" style="float:left;display:none">Registry comes here</div>
+
+</div>
+
+<div id="dlg_add" style="display:none">
+<table>
+<tr><td>Type :</td><td><select id="instance_type"></select></td></tr>
+<!--<tr><td>Description:</td><td id="description"></td></tr>-->
+<tr><td>Name :</td><td><input type="text" id="instance_name"/></td></tr>
+</div>
+
+
+</body>
+</html>
+

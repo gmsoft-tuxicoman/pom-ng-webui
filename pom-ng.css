@@ -1,0 +1,11 @@
+#menu {
+	padding: 1px;
+	float: left;
+	margin-right: 30px;
+}
+
+.menuentry {
+	padding: 10px;
+	margin: 10px;
+}
+
