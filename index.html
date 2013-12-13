@@ -32,15 +32,15 @@
 </div>
 
 <h2>Inputs :</h2>
-<table id="tab_inputs" class="ui-widget ui-widget-content ui-corner-all">
-<thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Actions</td></tr></thead>
+<table id="tab_inputs" class="ui-widget ui-widget-content ui-table">
+<thead><tr class="ui-widget-header"><td width="25%">Name</td><td width="25%">Type</td><td width="25%">Status</td><td width="25%">Actions</td></tr></thead>
 <tbody></tbody> 
 </table>
 
 <h2>Outputs :</h2>
-<table id="outputs" class="ui-widget ui-widget-content ui-corner-all">
-<thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Actions</td></tr></thead>
-<tbody><tr><td>output1</td><td>input_pcap</td><td>do stuff</td></tr></tbody>
+<table id="outputs" class="ui-widget ui-widget-content ui-table">
+<thead><tr class="ui-widget-header"><td width="25%">Name</td><td width="25%">Type</td><td width="25%">Status</td><td width="25%">Actions</td></tr></thead>
+<tbody><tr><td>output1</td><td>input_pcap</td><td>Running</td><td>do stuff</td></tr></tbody>
 </table>
 
 </div>
@@ -51,6 +51,7 @@
 <div id="tab_config">Config goes here</div>
 </div>
 
+
 </div>
 
 
@@ -59,8 +60,16 @@
 <tr><td>Type :</td><td><select id="instance_type"></select></td></tr>
 <!--<tr><td>Description:</td><td id="description"></td></tr>-->
 <tr><td>Name :</td><td><input type="text" id="instance_name"/></td></tr>
+</table>
 </div>
 
+<div id="dlg_inst_param" style="display:none">
+<div id="dlg_inst_param_descr"></div>
+<table class="ui-widget ui-widget-content ui-table">
+<thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Value</td></tr></thead>
+<tbody></tbody>
+</table>
+</div>
 
 </body>
 </html>

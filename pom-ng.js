@@ -36,19 +36,26 @@ pomng.registry.updateInstance = function(cls, instance_name) {
 
 pomng.registry.updateInstanceCB = function(cls, instance) {
 
+	instance.parameters = pomng.registry.nameMap(instance.parameters);
+	instance.performances = pomng.registry.nameMap(instance.performances);
 	pomng.registry.classes[cls].instances[instance.name] = instance;
-	pomng.registry.classes[cls].instances[instance.name].parameters = pomng.registry.nameMap(instance.parameters);
-	pomng.registry.classes[cls].instances[instance.name].performances = pomng.registry.nameMap(instance.performances);
 
-	pomngUI.registry.updateClass("#tab_registry", cls);
+	var event = new CustomEvent("pomng.registry.instance.update", { detail: { cls_name: cls, instance_name: instance.name }});
+	window.dispatchEvent(event);
+
+//	pomngUI.registry.updateClass("#tab_registry", cls);
 
 }
 
 pomng.registry.addInstance = function (cls_name, instance_name, instance_type) {
 
 	pomng.call("registry.addInstance", function(response, status, jqXHR) {
-		pomng.registry.updateInstance(pomng.registry.classes[cls_name], instance_name);
-		alert("instance " + instance_name + " added");
+
+	//	pomng.registry.updateInstance(pomng.registry.classes[cls_name], instance_name);
+	//
+		var event = new CustomEvent("pomng.registry.instance.new", { detail: { cls_name: cls_name, instance_name: instance_name }});
+		window.dispatchEvent(event);
+	
 		}, [ cls_name, instance_name , instance_type]);
 
 }
@@ -69,30 +76,38 @@ pomng.registry.update = function() {
 
 			if (pomng.serials["classes"] != rsp.classes_serial) {
 
-				var cls = rsp["classes"];
+				var classes = rsp["classes"];
 
+				for (var i = 0; i < classes.length; i++) {
 
+					var cls = classes[i];
 
-				for (var i = 0; i < cls.length; i++) {
-
-		
-					if (pomng.registry.classes[cls[i].name] !== undefined && cls.serial == pomng.registry.classes[cls[i].name].serial)
-						continue;
-
-					var instances = cls[i].instances;
-					cls[i].instances = {};
-
-					for (var j = 0; j < instances.length; j++) {
-						pomng.registry.updateInstance(cls[i], instances[j].name);
+					if (pomng.registry.classes[cls.name] === undefined) {
+						pomng.registry.classes[cls.name] = {};
+						pomng.registry.classes[cls.name].name = cls.name;
 					}
 
-					cls[i].available_types = pomng.registry.nameMap(cls[i].available_types);
-					cls[i].parameters = pomng.registry.nameMap(cls[i].parameters);
-					cls[i].performances = pomng.registry.nameMap(cls[i].performances);
+
+					if (cls.serial == pomng.registry.classes[cls.name].serial)
+						continue;
+
+					if (pomng.registry.classes[cls.name].instances === undefined)
+						pomng.registry.classes[cls.name].instances = {};
+
+					for (var j = 0; j < cls.instances.length; j++) {
+						var instance = cls.instances[j];
+						if (pomng.registry.classes[cls.name].instances[instance.name] === undefined ||
+							pomng.registry.classes[cls.name].instances[instance.name].serial != instance.serial)
+							pomng.registry.updateInstance(pomng.registry.classes[cls.name], instance.name);
+					}
+
+					pomng.registry.classes[cls.name].available_types = pomng.registry.nameMap(cls.available_types);
+					pomng.registry.classes[cls.name].parameters = pomng.registry.nameMap(cls.parameters);
+					pomng.registry.classes[cls.name].performances = pomng.registry.nameMap(cls.performances);
+					pomng.registry.classes[cls.name].serial = cls.serial;
 
 				}
 
-				pomng.registry.classes = pomng.registry.nameMap(cls);
 				pomng.serials["classes"] = response[0].classes_serial;
 
 			}

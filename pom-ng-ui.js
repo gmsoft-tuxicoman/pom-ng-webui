@@ -15,7 +15,10 @@ pomngUI.init = function () {
 
 	pomngUI.menu.init();
 	pomngUI.registry.need_init = true;
+	pomngUI.registry.config_list = [];
 
+	window.addEventListener("pomng.registry.instance.new", function(event) { pomngUI.registry.config_list.push({ cls: event.detail.cls_name, instance: event.detail.instance_name})});
+	window.addEventListener("pomng.registry.instance.update", function(event) { pomngUI.registry.evtUpdateInstance(event) });
 }
 
 pomngUI.menu.init = function () {
@@ -34,8 +37,8 @@ pomngUI.menu.init = function () {
 	$("#menu #tab_registry").on("tabsbeforeactivate", function(event, ui) { pomngUI.registry.init("#menu #tab_registry"); });
 
 
-	$("#add_input").button();
-	$("#add_output").button();
+	$("#add_input").button().click(function(event) { pomngUI.registry.dialogAddOpen("input"); } );
+	$("#add_output").button().click(function(event) { pomngUI.registry.dialogAddOpen("output"); } );
 
 }
 
@@ -56,6 +59,20 @@ pomngUI.registry.init = function (id) {
 		$(id + " #registry").append('<span class="ui-icon ui-icon-triangle-1-e" style="display:inline-block"/>' + keys[i] + addButton + '<div id="' + keys[i] + '" class="ui-widget-content ui-corner-all" style="margin-left:16px"></div>');
 		pomngUI.registry.updateClass(id, cls_name);
 	}
+
+}
+
+pomngUI.registry.evtUpdateInstance = function(event) {
+	
+	for (var i = 0; i < pomngUI.registry.config_list.length; i++) {
+		if (pomngUI.registry.config_list[i].cls == event.detail.cls_name &&
+			pomngUI.registry.config_list[i].instance == event.detail.instance_name) {
+			pomngUI.registry.config_list.splice(i, 1);
+			pomngUI.registry.dialogInstanceParameter(event.detail.cls_name, event.detail.instance_name);
+			break;
+		}
+	}
+
 }
 
 pomngUI.registry.updateClass = function(id, cls) {
@@ -88,13 +105,13 @@ pomngUI.registry.updateClass = function(id, cls) {
 
 }
 
-pomngUI.registry.dialogAddOpen = function(cls) {
+pomngUI.registry.dialogAddOpen = function(cls_name) {
 
 	
 	var options = ""
-	var avail_types = Object.keys(pomng.registry.classes[cls].available_types);
+	var avail_types = Object.keys(pomng.registry.classes[cls_name].available_types);
 	for (var i = 0; i < avail_types.length; i++)
-		options = options + '<option value="' + avail_types[i] + '">' + avail_types[i] + '</option>';
+		options += '<option value="' + avail_types[i] + '">' + avail_types[i] + '</option>';
 
 	$("#dlg_add #instance_type").html(options);
 	$("#dlg_add #instance_name").val("");
@@ -102,7 +119,7 @@ pomngUI.registry.dialogAddOpen = function(cls) {
 		resizable: false,
 		modal: true,
 		width: "auto",
-		title: "Add an instance of " + cls,
+		title: "Add an instance of " + cls_name,
 
 		buttons: {
 			"Add": function() {
@@ -112,7 +129,7 @@ pomngUI.registry.dialogAddOpen = function(cls) {
 					alert("You must specify a name");
 					return;
 				}
-				pomng.registry.addInstance(cls, name, type);
+				pomng.registry.addInstance(cls_name, name, type);
 				$(this).dialog("close");
 			},
 			Cancel: function() {
@@ -120,6 +137,38 @@ pomngUI.registry.dialogAddOpen = function(cls) {
 			}
 		}
 	});
-	
+
+}
+
+pomngUI.registry.dialogInstanceParameter = function(cls_name, inst_name) {
+
+	var params = pomng.registry.classes[cls_name].instances[inst_name].parameters;
+
+	var paramsHtml = "";
+
+	var params_name = Object.keys(params).sort();
+
+	for (var i = 0; i < params_name.length; i++)
+		paramsHtml += '<tr><td>' + params_name[i] + '</td><td>' + params[params_name[i]].type + '</td><td>' + params[params_name[i]].value + '</td></tr>';
+		
+
+	$("#dlg_inst_param tbody").html(paramsHtml);
+
+	$("#dlg_inst_param").dialog({
+		resizable: false,
+		modal: true,
+		width: "auto",
+		title: "Parameters of " + cls_name + " " + inst_name,
+
+		buttons: {
+			OK: function() {
+				alert("Applying params");
+			},
+			Cancel: function() {
+				$(this).dialog("close");
+			}
+		}
+	});
+
 
 }

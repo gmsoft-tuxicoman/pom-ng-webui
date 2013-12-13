@@ -9,17 +9,15 @@ h1 {
 	display:inline-block;
 }
 
-div#tab_summary {
-	min-width: 350px;
-}
-div#tab_summary table {
+
+.ui-table {
 	margin: 0;
 	border-collapse:
 	collapse;
 	width: 100%;
 }
 
-div#tab_summary table td, div#tab_summary table th {
+.ui-table td, .ui-table table th {
 	border: 1px solid #eee;
 	padding: .6em 10px;
 	text-align: left;
