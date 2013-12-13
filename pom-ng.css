@@ -1,11 +1,86 @@
-#menu {
-	padding: 1px;
+
+h1 {
+	text-align:center;
+}
+
+
+#toolbar {
+	padding: 4px;
+	display:inline-block;
+}
+
+div#tab_summary {
+	min-width: 350px;
+}
+div#tab_summary table {
+	margin: 0;
+	border-collapse:
+	collapse;
+	width: 100%;
+}
+
+div#tab_summary table td, div#tab_summary table th {
+	border: 1px solid #eee;
+	padding: .6em 10px;
+	text-align: left;
+}
+
+
+/* Tab stuff below for the menu */
+
+.ui-tabs.ui-tabs-vertical {
+	padding: 0;
+}
+
+
+
+
+.ui-tabs.ui-tabs-vertical .ui-tabs-nav {
 	float: left;
-	margin-right: 30px;
+	background: #CCC;
+	border-radius: 4px 0 0 4px;
+	border: 1px solid gray;
 }
 
-.menuentry {
-	padding: 10px;
-	margin: 10px;
+.ui-tabs.ui-tabs-vertical .ui-tabs-nav li {
+	clear: left;
+	width: 100%;
+	margin: 0.2em 0;
+	border: 1px solid gray;
+	border-width: 1px 0 1px 1px;
+	border-radius: 4px 0 0 4px;
+	overflow: hidden;
+	position: relative;
+	right: -2px;
+	z-index: 2;
 }
 
+.ui-tabs.ui-tabs-vertical .ui-tabs-nav li a {
+	display: block;
+	width: 100%;
+	padding: 0.6em 1em;
+}
+
+.ui-tabs.ui-tabs-vertical .ui-tabs-nav li a:hover {
+	cursor: pointer;
+}
+
+
+.ui-tabs.ui-tabs-vertical .ui-tabs-nav li.ui-tabs-active {
+	margin-bottom: 0.2em;
+	padding-bottom: 0;
+}
+
+.ui-tabs.ui-tabs-vertical .ui-tabs-nav li:last-child {
+	margin-bottom: 10px;
+}
+
+.ui-tabs.ui-tabs-vertical .ui-tabs-panel {
+	overflow: auto;
+	border-left: 1px solid gray;
+	border-radius: 0;
+	position: relative;
+	left: -1px;
+	padding: 0 0 0 0.5em;
+	margin: 0;
+}

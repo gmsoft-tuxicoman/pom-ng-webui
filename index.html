@@ -18,14 +18,41 @@
 <h1>POM-NG WebUI !</h1>
 
 <div id="menu" class="ui-widget">
-<button type="button" id="btn_config">Configurations</button><br/>
-<button type="button" id="btn_registry">Registry</button>
+	<ul>
+	<li><a href="#tab_summary">Summary</a></li>
+	<li><a href="#tab_registry">Registry</a></li>
+	<li><a href="#tab_config">Load/Save</a></li>
+	</ul>
+	
+<div id="tab_summary">
+
+<div id="toolbar" class="ui-widget-header ui-corner-all">
+	<button id="add_input">Add input</button>
+	<button id="add_output">Add output</button>
 </div>
 
-<div id="config" class="ui-widget" style="float:left;display:none">Config comes here</div>
-<div id="registry" class="ui-widget" style="float:left;display:none"></div>
+<h2>Inputs :</h2>
+<table id="tab_inputs" class="ui-widget ui-widget-content ui-corner-all">
+<thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Actions</td></tr></thead>
+<tbody></tbody> 
+</table>
+
+<h2>Outputs :</h2>
+<table id="outputs" class="ui-widget ui-widget-content ui-corner-all">
+<thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Actions</td></tr></thead>
+<tbody><tr><td>output1</td><td>input_pcap</td><td>do stuff</td></tr></tbody>
+</table>
 
 </div>
+
+
+<div id="tab_registry"></div>
+
+<div id="tab_config">Config goes here</div>
+</div>
+
+</div>
+
 
 <div id="dlg_add" style="display:none">
 <table>

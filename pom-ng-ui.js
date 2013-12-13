@@ -19,21 +19,24 @@ pomngUI.init = function () {
 }
 
 pomngUI.menu.init = function () {
-	$("#menu button").button();
 
-	$("#menu #btn_config").click(function () { pomngUI.menu.hideAll(); $("#config").show(); });
-	$("#menu #btn_registry").click(function () {
-		if (pomngUI.registry.need_init)
-			pomngUI.registry.init("div#registry");
-		pomngUI.menu.hideAll();
-		$("div#registry").show();
+	$("#menu").tabs({
+		activate: function (event, ui) {
+			var active = $("#menu").tabs("option", "active");
+			if ($("#menu ul>li a").eq(active).attr('href') == "#tab_registry" && pomngUI.registry.need_init)
+				pomngUI.registry.init("#tab_registry");
+		}
 	});
+	
+	$("#menu").addClass("ui-tabs-vertical ui-helper-clearfix");
+	$("#menu").removeClass("ui-widget-content");
+
+	$("#menu #tab_registry").on("tabsbeforeactivate", function(event, ui) { pomngUI.registry.init("#menu #tab_registry"); });
 
 
-}
+	$("#add_input").button();
+	$("#add_output").button();
 
-pomngUI.menu.hideAll = function () {
-	$("#config, #registry").hide();
 }
 
 pomngUI.registry.init = function (id) {

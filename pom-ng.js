@@ -40,7 +40,7 @@ pomng.registry.updateInstanceCB = function(cls, instance) {
 	pomng.registry.classes[cls].instances[instance.name].parameters = pomng.registry.nameMap(instance.parameters);
 	pomng.registry.classes[cls].instances[instance.name].performances = pomng.registry.nameMap(instance.performances);
 
-	pomngUI.registry.updateClass("div#registry", cls);
+	pomngUI.registry.updateClass("#tab_registry", cls);
 
 }
 
