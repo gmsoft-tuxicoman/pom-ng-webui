@@ -4,7 +4,7 @@ pomng.registry = {};
 
 pomng.title = "POM-NG WebUI";
 pomng.url = "/RPC2";
-pomng.call = function(method, success, params = null, context = null) {
+pomng.call = function(method, success, params, context) {
 	$.xmlrpc({
 		url: this.url,
 		methodName: method,
@@ -19,10 +19,12 @@ pomng.call_error = function(jqXHR, status, error) {
 	alert("An error occured : " + error);
 }
 
-pomng.registry.nameMap = function(lst, key_str = "name") {
+pomng.registry.nameMap = function(lst, key_str) {
 
-	if (typeof(lst) == "undefined")
+	if (lst === undefined)
 		return [];
+	
+	key_str = key_str || "name";
 
 	var res = {};
 	for (var i = 0; i < lst.length; i++) {
@@ -50,7 +52,7 @@ pomng.registry.updateInstanceCB = function(cls, instance) {
 
 }
 
-pomng.registry._nameaddInstance = function (cls_name, instance_name, instance_type) {
+pomng.registry.addInstance = function (cls_name, instance_name, instance_type) {
 
 	pomng.call("registry.addInstance", function(response, status, jqXHR) {
 
