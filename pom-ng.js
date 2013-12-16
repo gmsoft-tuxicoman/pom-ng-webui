@@ -168,6 +168,12 @@ pomng.poll_error = function(jqXHR, status, error) {
 		return;
 	}
 
+	if (jqXHR.status == 0) {
+		// The request was aborted
+		// Happens when the page is reloaded
+		return;
+	}
+
 	
 	var event = new CustomEvent("pomng.conn_error", { detail: { status: jqXHR.status, error: error }});
 	window.dispatchEvent(event);
