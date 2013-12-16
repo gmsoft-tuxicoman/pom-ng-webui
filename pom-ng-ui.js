@@ -1,7 +1,8 @@
 
 var pomngUI = {};
-pomngUI.registry = {};
 pomngUI.menu = {};
+pomngUI.registry = {};
+pomngUI.summary = {};
 
 pomngUI.init = function () {
 
@@ -14,11 +15,20 @@ pomngUI.init = function () {
 	);
 
 	pomngUI.menu.init();
+	pomngUI.summary.init();
 	pomngUI.registry.need_init = true;
 	pomngUI.registry.config_list = [];
 
-	window.addEventListener("pomng.registry.instance.new", function(event) { pomngUI.registry.config_list.push({ cls: event.detail.cls_name, instance: event.detail.instance_name})});
+	window.addEventListener("pomng.registry.instance.add", function(event) { pomngUI.registry.config_list.push({ cls: event.detail.cls_name, instance: event.detail.instance_name})});
 	window.addEventListener("pomng.registry.instance.update", function(event) { pomngUI.registry.evtUpdateInstance(event) });
+
+	window.addEventListener("pomng.conn_error", pomngUI.connectionError);
+
+	pomngUI.summary.init();
+}
+
+pomngUI.connectionError = function(event) {
+	document.title = pomng.title + " - CONNECTION ERROR | Reload the page to reconnect";
 }
 
 pomngUI.menu.init = function () {
@@ -169,6 +179,64 @@ pomngUI.registry.dialogInstanceParameter = function(cls_name, inst_name) {
 			}
 		}
 	});
+}
 
+
+pomngUI.summary.init = function() {
+
+	window.addEventListener("pomng.registry.instance.update", function(event) { pomngUI.summary.evtUpdateInstance(event) });
 
 }
+
+pomngUI.summary.evtUpdateInstance = function(event) {
+
+	var cls = event.detail.cls_name;
+
+	var elem = "#tab_summary #tbl_" + cls + " tbody";
+
+	var tbl = $(elem);
+
+	if (tbl.length == 0)
+		return;
+
+	var tr = $(elem + " #tr_" + event.detail.instance_name);
+
+	var instance = pomng.registry.classes[event.detail.cls_name].instances[event.detail.instance_name];
+
+	var html = '<td>' + instance.name + '</td><td>' + instance.parameters['type'].value + '</td><td>';
+
+	var running = instance.parameters['running'].value == "yes";
+
+	if (running)
+		html += 'Running';
+	else
+		html += 'Stopped';
+
+	html += '</td><td>';
+
+	// Start/Stop icon
+	if (running)
+		html += '<span class="ui-icon ui-icon-stop" style="display:inline-block" onclick="pomng.registry.setInstanceParam(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\', \'running\', \'no\')"/>';
+	else
+		html += '<span class="ui-icon ui-icon-play" style="display:inline-block" onclick="pomng.registry.setInstanceParam(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\', \'running\', \'yes\')"/>';
+	
+	// Parameter icon
+	html += '<span class="ui-icon ui-icon-gear" style="display:inline-block" onclick="pomngUI.registry.dialogInstanceParameter(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
+	
+	// Remove icon
+	html += '<span class="ui-icon ui-icon-close" style="display:inline-block"/>';
+	
+	html += '</td>';
+
+
+	if (tr.length > 0) {
+		// Update existing
+		tr.html(html);
+	} else {
+		// Add new
+		html = '<tr id="tr_' + event.detail.instance_name + '">' + html + '</tr>';
+		tbl.append(html);
+	}
+
+}
+

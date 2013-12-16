@@ -11,8 +11,12 @@ pomng.call = function(method, success, params = null, context = null) {
 		success: success,
 		params: params,
 		context: context,
-		error: function(jqXHR, status, error) { alert("An error occured : " + error); }
+		error: pomng.call_error
 	});
+}
+
+pomng.call_error = function(jqXHR, status, error) {
+	alert("An error occured : " + error);
 }
 
 pomng.registry.nameMap = function(lst, key_str = "name") {
@@ -43,21 +47,22 @@ pomng.registry.updateInstanceCB = function(cls, instance) {
 	var event = new CustomEvent("pomng.registry.instance.update", { detail: { cls_name: cls, instance_name: instance.name }});
 	window.dispatchEvent(event);
 
-//	pomngUI.registry.updateClass("#tab_registry", cls);
 
 }
 
-pomng.registry.addInstance = function (cls_name, instance_name, instance_type) {
+pomng.registry._nameaddInstance = function (cls_name, instance_name, instance_type) {
 
 	pomng.call("registry.addInstance", function(response, status, jqXHR) {
 
-	//	pomng.registry.updateInstance(pomng.registry.classes[cls_name], instance_name);
-	//
-		var event = new CustomEvent("pomng.registry.instance.new", { detail: { cls_name: cls_name, instance_name: instance_name }});
+		var event = new CustomEvent("pomng.registry.instance.add", { detail: { cls_name: cls_name, instance_name: instance_name }});
 		window.dispatchEvent(event);
 	
 		}, [ cls_name, instance_name , instance_type]);
 
+}
+
+pomng.registry.setInstanceParam = function(cls_name, instance_name, param_name, param_value) {
+	pomng.call("registry.setInstanceParam", null, [ cls_name, instance_name, param_name, param_value ]);
 }
 
 pomng.registry.update = function() {
@@ -132,8 +137,10 @@ pomng.init = function() {
 
 pomng.poll = function() {
 
-	pomng.call("core.serialPoll",
-		function (response, status, jqXHR) {
+	$.xmlrpc({
+		url: this.url,
+		methodName: "core.serialPoll",
+		success: function (response, status, jqXHR) {
 			var serials = response[0];
 
 			if (pomng.serials["registry"] != serials["registry"]) {
@@ -146,9 +153,24 @@ pomng.poll = function() {
 			pomng.poll();
 
 		},
-		[ pomng.serials["main"] ]
+		params: [ pomng.serials["main"] ],
+		error: pomng.poll_error,
+	});
+}
 
-	);
+pomng.poll_error = function(jqXHR, status, error) {
+
+	if (jqXHR.status == 502 || jqXHR.status == 503) {
+		// Most probably a timeout, restart polling
+		pomng.poll();
+		return;
+	}
+
+	
+	var event = new CustomEvent("pomng.conn_error", { detail: { status: jqXHR.status, error: error }});
+	window.dispatchEvent(event);
+
+	alert("Polling failed ! Status : " + jqXHR.status + " | " + error);
 }
 
 $(document).ready( function() {
