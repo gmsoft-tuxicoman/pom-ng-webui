@@ -82,7 +82,9 @@ pomng.registry.update = function() {
 				// Update the config list
 				pomng.registry.configs = pomng.registry.nameMap(rsp["configs"]);
 				pomng.serials["configs"] = rsp.configs_serial;
-
+				
+				var event = new Event("pomng.registry.config.update");
+				window.dispatchEvent(event);
 			}
 
 			if (pomng.serials["classes"] != rsp.classes_serial) {
@@ -150,7 +152,6 @@ pomng.init = function() {
 	pomng.serials = [];
 	pomng.serials["main"] = 0;
 	pomng.registry.classes = {};
-	pomng.registry.ui_need_init = true;
 
 	// Start polling
 	pomng.poll();

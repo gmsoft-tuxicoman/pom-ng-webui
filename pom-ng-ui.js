@@ -1,9 +1,5 @@
 
 var pomngUI = {};
-pomngUI.menu = {};
-pomngUI.registry = {};
-pomngUI.summary = {};
-pomngUI.dialog = {};
 
 pomngUI.init = function () {
 
@@ -18,6 +14,7 @@ pomngUI.init = function () {
 	pomngUI.summary.init();
 	pomngUI.dialog.init();
 	pomngUI.registry.init();
+	pomngUI.config.init();
 
 	$("#menu").tabs();
 	
@@ -33,10 +30,12 @@ pomngUI.init = function () {
  * Registry view
  */
 
+pomngUI.registry = {};
+
 pomngUI.registry.init = function() {
 
-	window.addEventListener("pomng.registry.instance.update", function(event) { pomngUI.registry.evtUpdateInstance(event) });
-	window.addEventListener("pomng.registry.instance.remove", function(event) { pomngUI.registry.evtRemoveInstance(event) });
+	window.addEventListener("pomng.registry.instance.update", pomngUI.registry.evtUpdateInstance);
+	window.addEventListener("pomng.registry.instance.remove", pomngUI.registry.evtRemoveInstance);
 }
 
 pomngUI.registry.evtUpdateInstance = function(event) {
@@ -95,12 +94,14 @@ pomngUI.registry.evtRemoveInstance = function(event) {
  * Dialog handling
  */
 
+pomngUI.dialog = {};
+
 pomngUI.dialog.init = function() {
 
 	pomngUI.dialog.config_list = [];
 
 	window.addEventListener("pomng.registry.instance.add", function(event) { pomngUI.dialog.config_list.push({ cls: event.detail.cls_name, instance: event.detail.instance_name})});
-	window.addEventListener("pomng.registry.instance.update", function(event) { pomngUI.dialog.evtUpdateInstance(event) });
+	window.addEventListener("pomng.registry.instance.update", pomngUI.dialog.evtUpdateInstance);
 
 }
 
@@ -233,14 +234,15 @@ pomngUI.dialog.instanceRemove = function(cls_name, inst_name) {
 /*
  * Summary view
  */
+pomngUI.summary = {};
 
 pomngUI.summary.init = function() {
 
 	$("#tab_summary #add_input").button().click(function(event) { pomngUI.dialog.instanceAdd("input"); } );
 	$("#tab_summary #add_output").button().click(function(event) { pomngUI.dialog.instanceAdd("output"); } );
 
-	window.addEventListener("pomng.registry.instance.update", function(event) { pomngUI.summary.evtUpdateInstance(event) });
-	window.addEventListener("pomng.registry.instance.remove", function(event) { pomngUI.summary.evtRemoveInstance(event) });
+	window.addEventListener("pomng.registry.instance.update", pomngUI.summary.evtUpdateInstance);
+	window.addEventListener("pomng.registry.instance.remove", pomngUI.summary.evtRemoveInstance);
 
 }
 
@@ -309,3 +311,40 @@ pomngUI.summary.evtRemoveInstance = function(event) {
 
 	console.log("pomUI.summary: Removed instance " + cls + " " + inst);
 }
+
+
+/*
+ * Config view
+ */
+pomngUI.config = {};
+
+pomngUI.config.init = function() {
+
+	window.addEventListener("pomng.registry.config.update", pomngUI.config.evtConfigUpdate);
+
+}
+
+pomngUI.config.evtConfigUpdate = function(event) {
+
+	var elem = $("#tab_config #tbl_config tbody");
+
+	var html = "";
+
+	var configs = pomng.registry.configs;
+	var configs_name = Object.keys(configs).sort();
+
+	for (var i = 0; i < configs_name.length; i++) {
+
+		var config = configs[configs_name[i]];
+		html += '<tr><td>' + config.name + '</td><td>' + config.timestamp + '</td><td>';
+		html += '<span class="ui-icon ui-icon-folder-open" style="display:inline-block" onclick="pomng.call(\'registry.load\', null, [ \'' + config.name + '\' ])"/>';
+		html += '<span class="ui-icon ui-icon-disk" style="display:inline-block"/>';
+		html += '<span class="ui-icon ui-icon-trash" style="display:inline-block"/>';
+		html += '</td></tr>';
+	}
+
+	elem.html(html);
+
+}
+
+
