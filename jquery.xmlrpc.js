@@ -264,7 +264,13 @@
 			_pad(d.getUTCMinutes()), ':', _pad(d.getUTCSeconds()), 'Z'
 		].join('');
 	}, function(text) {
-		return new Date(text);
+		var year = text.slice(0,4);
+		var month = text.slice(4,6);
+		var day = text.slice(6,8);
+		var hour = text.slice(9,11);
+		var minute = text.slice(12,14);
+		var sec = text.slice(15,17);
+		return new Date(year, month - 1, day, hour, minute, sec);
 	});
 
 	// Go between a base64 string and an ArrayBuffer
