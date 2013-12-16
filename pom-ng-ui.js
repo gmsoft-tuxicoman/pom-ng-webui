@@ -3,6 +3,7 @@ var pomngUI = {};
 pomngUI.menu = {};
 pomngUI.registry = {};
 pomngUI.summary = {};
+pomngUI.dialog = {};
 
 pomngUI.init = function () {
 
@@ -47,8 +48,8 @@ pomngUI.menu.init = function () {
 	$("#menu #tab_registry").on("tabsbeforeactivate", function(event, ui) { pomngUI.registry.init("#menu #tab_registry"); });
 
 
-	$("#add_input").button().click(function(event) { pomngUI.registry.dialogAddOpen("input"); } );
-	$("#add_output").button().click(function(event) { pomngUI.registry.dialogAddOpen("output"); } );
+	$("#add_input").button().click(function(event) { pomngUI.dialog.instanceAdd("input"); } );
+	$("#add_output").button().click(function(event) { pomngUI.dialog.instanceAdd("output"); } );
 
 }
 
@@ -65,7 +66,7 @@ pomngUI.registry.init = function (id) {
 		var avail_types = Object.keys(pomng.registry.classes[cls_name].available_types);
 		var addButton = "";
 		if (avail_types.length > 0)
-			addButton = ' <span class="ui-icon ui-icon-circle-plus" id="btn_add_' + cls_name + '" style="display:inline-block" onclick="pomngUI.registry.dialogAddOpen(\'' + cls_name + '\')"/>';
+			addButton = ' <span class="ui-icon ui-icon-circle-plus" id="btn_add_' + cls_name + '" style="display:inline-block" onclick="pomngUI.dialog.instanceAdd(\'' + cls_name + '\')"/>';
 		$(id + " #registry").append('<span class="ui-icon ui-icon-triangle-1-e" style="display:inline-block"/>' + keys[i] + addButton + '<div id="' + keys[i] + '" class="ui-widget-content ui-corner-all" style="margin-left:16px"></div>');
 		pomngUI.registry.updateClass(id, cls_name);
 	}
@@ -78,7 +79,7 @@ pomngUI.registry.evtUpdateInstance = function(event) {
 		if (pomngUI.registry.config_list[i].cls == event.detail.cls_name &&
 			pomngUI.registry.config_list[i].instance == event.detail.instance_name) {
 			pomngUI.registry.config_list.splice(i, 1);
-			pomngUI.registry.dialogInstanceParameter(event.detail.cls_name, event.detail.instance_name);
+			pomngUI.dialog.instanceParameter(event.detail.cls_name, event.detail.instance_name);
 			break;
 		}
 	}
@@ -115,7 +116,7 @@ pomngUI.registry.updateClass = function(id, cls) {
 
 }
 
-pomngUI.registry.dialogAddOpen = function(cls_name) {
+pomngUI.dialog.instanceAdd = function(cls_name) {
 
 	
 	var options = ""
@@ -150,7 +151,7 @@ pomngUI.registry.dialogAddOpen = function(cls_name) {
 
 }
 
-pomngUI.registry.dialogInstanceParameter = function(cls_name, inst_name) {
+pomngUI.dialog.instanceParameter = function(cls_name, inst_name) {
 
 	var params = pomng.registry.classes[cls_name].instances[inst_name].parameters;
 
@@ -158,8 +159,13 @@ pomngUI.registry.dialogInstanceParameter = function(cls_name, inst_name) {
 
 	var params_name = Object.keys(params).sort();
 
-	for (var i = 0; i < params_name.length; i++)
-		paramsHtml += '<tr><td>' + params_name[i] + '</td><td>' + params[params_name[i]].type + '</td><td>' + params[params_name[i]].value + '</td></tr>';
+	for (var i = 0; i < params_name.length; i++) {
+		if (params_name[i] == 'type' || params_name[i] == 'uid' || params_name[i] == 'running')
+			continue; // No need to display these params
+
+		paramsHtml += '<tr><td>' + params_name[i] + '</td><td>' + params[params_name[i]].type + '</td><td><input id="val_' + params_name[i] + '" type="text" value="' + params[params_name[i]].value + '"/></td></tr>';
+
+	}
 		
 
 	$("#dlg_inst_param tbody").html(paramsHtml);
@@ -172,13 +178,31 @@ pomngUI.registry.dialogInstanceParameter = function(cls_name, inst_name) {
 
 		buttons: {
 			OK: function() {
-				alert("Applying params");
+				pomngUI.dialog.instanceParameterOK(cls_name, inst_name)
+					$(this).dialog("close");
 			},
 			Cancel: function() {
 				$(this).dialog("close");
 			}
 		}
 	});
+}
+
+pomngUI.dialog.instanceParameterOK = function(cls_name, inst_name) {
+
+
+	var params = pomng.registry.classes[cls_name].instances[inst_name].parameters;
+
+	var params_name = Object.keys(params).sort();
+
+	for (var i = 0; i < params_name.length; i++) {
+		if (params_name[i] == 'type' || params_name[i] == 'uid' || params_name[i] == 'running')
+			continue;
+
+		var value = $("#dlg_inst_param #val_" + params_name[i]).val();
+		if (value != params[params_name[i]].value)
+			pomng.registry.setInstanceParam(cls_name, inst_name, params_name[i], value);
+	}
 }
 
 
@@ -221,7 +245,7 @@ pomngUI.summary.evtUpdateInstance = function(event) {
 		html += '<span class="ui-icon ui-icon-play" style="display:inline-block" onclick="pomng.registry.setInstanceParam(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\', \'running\', \'yes\')"/>';
 	
 	// Parameter icon
-	html += '<span class="ui-icon ui-icon-gear" style="display:inline-block" onclick="pomngUI.registry.dialogInstanceParameter(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
+	html += '<span class="ui-icon ui-icon-gear" style="display:inline-block" onclick="pomngUI.dialog.instanceParameter(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
 	
 	// Remove icon
 	html += '<span class="ui-icon ui-icon-close" style="display:inline-block"/>';
