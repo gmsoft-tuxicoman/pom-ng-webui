@@ -15,89 +15,85 @@ pomngUI.init = function () {
 			document.title = pomng.title + " - Connected to version " + pomng.version; }
 	);
 
-	pomngUI.menu.init();
 	pomngUI.summary.init();
 	pomngUI.dialog.init();
-	pomngUI.registry.need_init = true;
+	pomngUI.registry.init();
 
-	window.addEventListener("pomng.conn_error", pomngUI.connectionError);
-
-}
-
-pomngUI.connectionError = function(event) {
-	document.title = pomng.title + " - CONNECTION ERROR | Reload the page to reconnect";
-}
-
-pomngUI.menu.init = function () {
-
-	$("#menu").tabs({
-		activate: function (event, ui) {
-			var active = $("#menu").tabs("option", "active");
-			if ($("#menu ul>li a").eq(active).attr('href') == "#tab_registry" && pomngUI.registry.need_init)
-				pomngUI.registry.init("#tab_registry");
-		}
-	});
+	$("#menu").tabs();
 	
 	$("#menu").addClass("ui-tabs-vertical ui-helper-clearfix");
 	$("#menu").removeClass("ui-widget-content");
 
-	$("#menu #tab_registry").on("tabsbeforeactivate", function(event, ui) { pomngUI.registry.init("#menu #tab_registry"); });
-
-
-	$("#add_input").button().click(function(event) { pomngUI.dialog.instanceAdd("input"); } );
-	$("#add_output").button().click(function(event) { pomngUI.dialog.instanceAdd("output"); } );
+	window.addEventListener("pomng.conn_error", function(event) { document.title = pomng.title + " - CONNECTION ERROR | Reload the page to reconnect"; });
 
 }
 
-pomngUI.registry.init = function (id) {
 
-	pomngUI.registry.need_init = false;
+/*
+ * Registry view
+ */
 
-	$(id).append('<div id="registry" class="ui-widget-header ui-corner-all"/></div>');
+pomngUI.registry.init = function() {
 
-	var keys = Object.keys(pomng.registry.classes).sort();
+	window.addEventListener("pomng.registry.instance.update", function(event) { pomngUI.registry.evtUpdateInstance(event) });
+	window.addEventListener("pomng.registry.instance.remove", function(event) { pomngUI.registry.evtRemoveInstance(event) });
+}
 
-	for (var i = 0; i < keys.length; i++) {
-		var cls_name = keys[i];
-		var avail_types = Object.keys(pomng.registry.classes[cls_name].available_types);
+pomngUI.registry.evtUpdateInstance = function(event) {
+
+	var cls_name = event.detail.cls_name;
+
+	var cls_elem = $("#registry #cls_" + cls_name);
+
+	var avail_types = Object.keys(pomng.registry.classes[cls_name].available_types);
+
+	if (cls_elem.length <= 0) {
+		// We need to add the class
+
 		var addButton = "";
 		if (avail_types.length > 0)
 			addButton = ' <span class="ui-icon ui-icon-circle-plus" id="btn_add_' + cls_name + '" style="display:inline-block" onclick="pomngUI.dialog.instanceAdd(\'' + cls_name + '\')"/>';
-		$(id + " #registry").append('<span class="ui-icon ui-icon-triangle-1-e" style="display:inline-block"/>' + keys[i] + addButton + '<div id="' + keys[i] + '" class="ui-widget-content ui-corner-all" style="margin-left:16px"></div>');
-		pomngUI.registry.updateClass(id, cls_name);
+		$("#registry").append('<div id="cls_' + cls_name + '"><span class="ui-icon ui-icon-triangle-1-e" style="display:inline-block"/>' + cls_name + addButton + '<div id="cls_inst_' + cls_name + '" class="ui-widget-content ui-corner-all" style="margin-left:16px"></div></div>');
 	}
 
-}
+	// Add the instance
+	
+	var inst_name = event.detail.instance_name;
+	var inst_elem = $("#registry #cls_inst_" + cls_name + " #inst_" + inst_name);
 
-pomngUI.registry.updateClass = function(id, cls) {
+	if (inst_elem.length > 0)
+		return; // The element already exists
 
-	if (pomngUI.registry.need_init)
-		return;
-
-	var inst_names = Object.keys(pomng.registry.classes[cls].instances).sort();
-
-	var avail_types = Object.keys(pomng.registry.classes[cls].available_types);
-
-	var instHtml = "";
-	for (var i = 0; i < inst_names.length; i++) {
-		var inst_name = inst_names[i];
-		instHtml += '<div id="' + inst_name + '"><span class="ui-icon ui-icon-carat-1-e" style="display:inline-block"/>' + inst_name;
+	var instHtml = '<div id="inst_' + inst_name + '"><span class="ui-icon ui-icon-carat-1-e" style="display:inline-block"/>' + inst_name;
 		
-		var inst = pomng.registry.classes[cls].instances[inst_name];
-		var p_type = inst.parameters["type"];
+	var inst = pomng.registry.classes[cls_name].instances[inst_name];
+	var p_type = inst.parameters["type"];
 
-		if (p_type !== undefined)
-			instHtml += " (" + p_type.value + ")";
+	if (p_type !== undefined)
+		instHtml += " (" + p_type.value + ")";
 
-		if (avail_types.length > 0)
-			instHtml += "[x]";
+	if (avail_types.length > 0)
+		instHtml += '<span class="ui-icon ui-icon-close" style="display:inline-block" onclick="pomngUI.dialog.instanceRemove(\'' + cls_name + '\', \'' + inst_name + '\')"/>';
 
-		instHtml += '</div>';
-	}
+	instHtml += '</div>';
 
-	$(id + " #registry #" + cls).html(instHtml);
+	$("#registry #cls_inst_" + cls_name).append(instHtml);
 
 }
+
+pomngUI.registry.evtRemoveInstance = function(event) {
+
+	var cls_name = event.detail.cls_name;
+	var inst_name = event.detail.instance_name;
+
+	var elem_str = "#registry #cls_inst_" + cls_name + " #inst_" + inst_name;
+	$(elem_str).remove();
+
+}
+
+/*
+ * Dialog handling
+ */
 
 pomngUI.dialog.init = function() {
 
@@ -234,8 +230,14 @@ pomngUI.dialog.instanceRemove = function(cls_name, inst_name) {
 
 }
 
+/*
+ * Summary view
+ */
 
 pomngUI.summary.init = function() {
+
+	$("#tab_summary #add_input").button().click(function(event) { pomngUI.dialog.instanceAdd("input"); } );
+	$("#tab_summary #add_output").button().click(function(event) { pomngUI.dialog.instanceAdd("output"); } );
 
 	window.addEventListener("pomng.registry.instance.update", function(event) { pomngUI.summary.evtUpdateInstance(event) });
 	window.addEventListener("pomng.registry.instance.remove", function(event) { pomngUI.summary.evtRemoveInstance(event) });
