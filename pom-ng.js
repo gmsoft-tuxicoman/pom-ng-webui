@@ -67,6 +67,10 @@ pomng.registry.setInstanceParam = function(cls_name, instance_name, param_name, 
 	pomng.call("registry.setInstanceParam", null, [ cls_name, instance_name, param_name, param_value ]);
 }
 
+pomng.registry.removeInstance = function(cls_name, instance_name) {
+	pomng.call("registry.removeInstance", null, [ cls_name, instance_name ]);
+}
+
 pomng.registry.update = function() {
 
 	pomng.call("registry.list",
@@ -82,6 +86,7 @@ pomng.registry.update = function() {
 			}
 
 			if (pomng.serials["classes"] != rsp.classes_serial) {
+				// Check the classes if the global classes serial changed
 
 				var classes = rsp["classes"];
 
@@ -94,24 +99,39 @@ pomng.registry.update = function() {
 						pomng.registry.classes[cls.name].name = cls.name;
 					}
 
-
+					// Don't check this class if it serial did not change
 					if (cls.serial == pomng.registry.classes[cls.name].serial)
 						continue;
 
 					if (pomng.registry.classes[cls.name].instances === undefined)
 						pomng.registry.classes[cls.name].instances = {};
 
+					// Keep trace of all the instances we know about
+					var old_instances = Object.keys(pomng.registry.classes[cls.name].instances);
+
 					for (var j = 0; j < cls.instances.length; j++) {
 						var instance = cls.instances[j];
 						if (pomng.registry.classes[cls.name].instances[instance.name] === undefined ||
 							pomng.registry.classes[cls.name].instances[instance.name].serial != instance.serial)
 							pomng.registry.updateInstance(pomng.registry.classes[cls.name], instance.name);
+
+						// Remove this instance from the known list
+						var idx = old_instances.indexOf(instance.name);
+						if (idx != -1)
+							old_instances.splice(idx, 1);
 					}
 
 					pomng.registry.classes[cls.name].available_types = pomng.registry.nameMap(cls.available_types);
 					pomng.registry.classes[cls.name].parameters = pomng.registry.nameMap(cls.parameters);
 					pomng.registry.classes[cls.name].performances = pomng.registry.nameMap(cls.performances);
 					pomng.registry.classes[cls.name].serial = cls.serial;
+
+					// Send a delete item for all the intances that were not present in this update
+					for (var j = 0; j < old_instances.length; j++) {
+						pomng.registry.classes[cls.name].instances[old_instances[j]] = undefined;
+						var event = new CustomEvent("pomng.registry.instance.remove", { detail: { cls_name: cls.name, instance_name: old_instances[j] }});
+						window.dispatchEvent(event);
+					}
 
 				}
 
