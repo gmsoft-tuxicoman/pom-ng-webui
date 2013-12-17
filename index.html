@@ -50,6 +50,12 @@
 		</div>
 
 		<div id="tab_config">
+			<div id="toolbar" class="ui-widget-header ui-corner-all">
+				<button id="save_as">Save as</button>
+				<button id="reset">Reset</button>
+			</div>
+
+			<h2>Configurations :</h2>
 			<table id="tbl_config" class="ui-widget ui-widget-content ui-table">
 				<thead><tr class="ui-widget-header"><td>Name</td><td>Last modification</td><td>Actions</td></tr></thead>
 				<tbody></tbody>
@@ -76,7 +82,13 @@
 	</table>
 </div>
 
-<div id="dlg_inst_remove" style="display:none"></div>
+<div id="dlg_confirm" style="display:none"></div>
+
+<div id="dlg_config_saveas" style="display:none">
+	<p> Save configuration as :<br/>
+	<input id="config_name" type="text" title="Configuration name"/>
+	</p>
+</div>
 
 </body>
 </html>

@@ -209,24 +209,93 @@ pomngUI.dialog.instanceParameterOK = function(cls_name, inst_name) {
 
 pomngUI.dialog.instanceRemove = function(cls_name, inst_name) {
 
-	$("#dlg_inst_remove").html("Are you sure you want to remove " + cls_name + " " + inst_name + " ?");
+	pomngUI.dialog.confirm("Remove " + cls_name + " " + inst_name + " ?",
+		"Are you sure you want to remove " + cls_name + " " + inst_name + " ?",
+		{ cls_name: cls_name, inst_name: inst_name },
+		function(params) { pomng.registry.removeInstance(params.cls_name, params.inst_name) });
+
+}
+
+pomngUI.dialog.configOpen = function(config_name) {
+	pomngUI.dialog.confirm("Open config " + config_name + " ?",
+		"Are you sure you want to load configuration '" + config_name + "' ?",
+		config_name,
+		function(cfg) { pomng.call('registry.load', null, [ cfg ]) });
+}
+
+pomngUI.dialog.configOverwrite = function(config_name) {
+	pomngUI.dialog.confirm("Overwrite config " + config_name + " ?",
+		"Are you sure you want to overwrite configuration '" + config_name + "' ?",
+		config_name,
+		function(cfg) { pomng.call('registry.save', null, [ cfg ]) });
+}
+
+pomngUI.dialog.configDelete = function(config_name) {
+
+	pomngUI.dialog.confirm("Delete config " + config_name + " ?",
+		"Are you sure you want to delete configuration '" + config_name + "' ?",
+		config_name,
+		function(cfg) { pomng.call('registry.delete_config', null, [ cfg ]) });
+}
+
+pomngUI.dialog.configReset = function() {
+
+	pomngUI.dialog.confirm("Reset configuration ?",
+		"Are you sure you want to reset POM-NG's configuration ?",
+		null, function(cfg) { pomng.call('registry.reset') });
+}
+
+pomngUI.dialog.confirm = function(title, html, params, yes_function) {
+
+
+	$("#dlg_confirm").html(html);
 	
-	$("#dlg_inst_remove").dialog({
+	$("#dlg_confirm").dialog({
 		resizable: false,
 		modal: true,
 		width: "auto",
-		title: "Remove " + cls_name + " " + inst_name + " ?",
+		title: title,
 
 		buttons: {
 			Yes: function() {
-				pomng.registry.removeInstance(cls_name, inst_name);
+				yes_function(params);
 				$(this).dialog("close");
 			},
 			No: function() {
 				$(this).dialog("close");
 			}
 		}
+	});
 
+}
+
+pomngUI.dialog.configSaveAs = function() {
+
+	$("#dlg_config_saveas #config_name").val('');
+
+	$("#dlg_config_saveas").dialog({
+		resizable: false,
+		modal: true,
+		width: "auto",
+		title: "Save configuration as",
+
+		buttons: {
+			Save: function() {
+				var val = $("#dlg_config_saveas #config_name").val();
+				if (val == "") {
+					alert("You must specify a name");
+					return;
+				} else if (pomng.registry.configs[val] !== undefined) {
+					pomngUI.dialog.configOverwrite(val);
+				} else {
+					pomng.call('registry.save', null, [ val ]);
+				}
+				$(this).dialog("close");
+			},
+			Cancel: function() {
+				$(this).dialog("close");
+			}
+		}
 	});
 
 }
@@ -320,6 +389,9 @@ pomngUI.config = {};
 
 pomngUI.config.init = function() {
 
+	$("#tab_config #save_as").button().click(function(event) { pomngUI.dialog.configSaveAs(); } );
+	$("#tab_config #reset").button().click(function(event) { pomngUI.dialog.configReset(); } );
+
 	window.addEventListener("pomng.registry.config.update", pomngUI.config.evtConfigUpdate);
 
 }
@@ -337,9 +409,9 @@ pomngUI.config.evtConfigUpdate = function(event) {
 
 		var config = configs[configs_name[i]];
 		html += '<tr><td>' + config.name + '</td><td>' + config.timestamp + '</td><td>';
-		html += '<span class="ui-icon ui-icon-folder-open" style="display:inline-block" onclick="pomng.call(\'registry.load\', null, [ \'' + config.name + '\' ])"/>';
-		html += '<span class="ui-icon ui-icon-disk" style="display:inline-block"/>';
-		html += '<span class="ui-icon ui-icon-trash" style="display:inline-block"/>';
+		html += '<span class="ui-icon ui-icon-folder-open" style="display:inline-block" title="Open configuration" onclick="pomngUI.dialog.configOpen(\'' + config.name + '\')"/>';
+		html += '<span class="ui-icon ui-icon-disk" style="display:inline-block" title="Save configuration" onclick="pomngUI.dialog.configOverwrite(\'' + config.name + '\')"/>';
+		html += '<span class="ui-icon ui-icon-trash" style="display:inline-block" title="Delete configuration" onclick="pomngUI.dialog.configDelete(\'' + config.name + '\')"/>';
 		html += '</td></tr>';
 	}
 
