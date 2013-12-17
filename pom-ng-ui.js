@@ -34,30 +34,38 @@ pomngUI.registry = {};
 
 pomngUI.registry.init = function() {
 
-	window.addEventListener("pomng.registry.instance.update", pomngUI.registry.evtUpdateInstance);
-	window.addEventListener("pomng.registry.instance.remove", pomngUI.registry.evtRemoveInstance);
+	window.addEventListener("pomng.registry.ready", pomngUI.registry.evtReady);
+
 }
 
-pomngUI.registry.evtUpdateInstance = function(event) {
+pomngUI.registry.evtReady = function(event) {
 
-	var cls_name = event.detail.cls_name;
+	var clss_name = Object.keys(pomng.registry.classes).sort();
 
-	var cls_elem = $("#registry #cls_" + cls_name);
+	for (var i = 0; i < clss_name.length; i++) {
+		var cls = pomng.registry.classes[clss_name[i]];
 
-	var avail_types = Object.keys(pomng.registry.classes[cls_name].available_types);
-
-	if (cls_elem.length <= 0) {
-		// We need to add the class
+		var avail_types = Object.keys(cls.available_types);
 
 		var addButton = "";
 		if (avail_types.length > 0)
-			addButton = ' <span class="ui-icon ui-icon-circle-plus" id="btn_add_' + cls_name + '" style="display:inline-block" onclick="pomngUI.dialog.instanceAdd(\'' + cls_name + '\')"/>';
-		$("#registry").append('<div id="cls_' + cls_name + '"><span class="ui-icon ui-icon-triangle-1-e" style="display:inline-block"/>' + cls_name + addButton + '<div id="cls_inst_' + cls_name + '" class="ui-widget-content ui-corner-all" style="margin-left:16px"></div></div>');
+			addButton = ' <span class="ui-icon ui-icon-circle-plus" id="btn_add_' + cls.name + '" style="display:inline-block" onclick="pomngUI.dialog.instanceAdd(\'' + cls.name + '\')"/>';
+		$("#registry").append('<div id="cls_' + cls.name + '"><span class="ui-icon ui-icon-triangle-1-e" style="display:inline-block"/>' + cls.name + addButton + '<div id="cls_inst_' + cls.name + '" class="ui-widget-content ui-corner-all" style="margin-left:16px"></div></div>');
+
+		var instances_name = Object.keys(cls.instances).sort();
+		for (var j = 0; j < instances_name.length; j++)
+			pomngUI.registry.updateInstance(cls.name, instances_name[j]);
+
 	}
+
+	window.addEventListener("pomng.registry.instance.update", function(event) { pomngUI.registry.updateInstance(event.detail.cls_name, event.detail.instance_name) });
+	window.addEventListener("pomng.registry.instance.remove", pomngUI.registry.evtRemoveInstance);
+}
+
+pomngUI.registry.updateInstance = function(cls_name, inst_name) {
 
 	// Add the instance
 	
-	var inst_name = event.detail.instance_name;
 	var inst_elem = $("#registry #cls_inst_" + cls_name + " #inst_" + inst_name);
 
 	if (inst_elem.length > 0)
@@ -71,6 +79,7 @@ pomngUI.registry.evtUpdateInstance = function(event) {
 	if (p_type !== undefined)
 		instHtml += " (" + p_type.value + ")";
 
+	var avail_types = Object.keys(pomng.registry.classes[cls_name].available_types);
 	if (avail_types.length > 0)
 		instHtml += '<span class="ui-icon ui-icon-close" style="display:inline-block" onclick="pomngUI.dialog.instanceRemove(\'' + cls_name + '\', \'' + inst_name + '\')"/>';
 
@@ -103,6 +112,24 @@ pomngUI.dialog.init = function() {
 	window.addEventListener("pomng.registry.instance.add", function(event) { pomngUI.dialog.config_list.push({ cls: event.detail.cls_name, instance: event.detail.instance_name})});
 	window.addEventListener("pomng.registry.instance.update", pomngUI.dialog.evtUpdateInstance);
 
+	$("#dlg_loading").dialog({
+		resizable: false,
+		modal: true,
+		width: "auto",
+		title: "Loading ...",
+		dialogClass: "no-close"
+	});
+
+	window.addEventListener("pomng.registry.instance.update", pomngUI.dialog.loading);
+	window.addEventListener("pomng.registry.ready", function(event) {
+		$("#dlg_loading").dialog("close");
+		window.removeEventListener("pomng.registry.instance.update", pomngUI.dialog.loading);
+		});
+
+}
+
+pomngUI.dialog.loading = function(event) {
+	$("#dlg_loading #remaining").html("Remaining instances : " + pomng.registry.loading);
 }
 
 pomngUI.dialog.evtUpdateInstance = function(event) {

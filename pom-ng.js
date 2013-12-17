@@ -49,6 +49,14 @@ pomng.registry.updateInstanceCB = function(cls, instance) {
 	var event = new CustomEvent("pomng.registry.instance.update", { detail: { cls_name: cls, instance_name: instance.name }});
 	window.dispatchEvent(event);
 
+	if (pomng.registry.loading !== undefined) {
+		pomng.registry.loading--;
+		if (pomng.registry.loading == 0) {
+			event = new Event("pomng.registry.ready")
+			window.dispatchEvent(event);
+			delete pomng.registry.loading;
+		}
+	}
 
 }
 
@@ -114,8 +122,12 @@ pomng.registry.update = function() {
 					for (var j = 0; j < cls.instances.length; j++) {
 						var instance = cls.instances[j];
 						if (pomng.registry.classes[cls.name].instances[instance.name] === undefined ||
-							pomng.registry.classes[cls.name].instances[instance.name].serial != instance.serial)
+							pomng.registry.classes[cls.name].instances[instance.name].serial != instance.serial) {
+
+							if (pomng.registry.loading !== undefined)
+								pomng.registry.loading++;
 							pomng.registry.updateInstance(pomng.registry.classes[cls.name], instance.name);
+						}
 
 						// Remove this instance from the known list
 						var idx = old_instances.indexOf(instance.name);
@@ -152,6 +164,7 @@ pomng.init = function() {
 	pomng.serials = [];
 	pomng.serials["main"] = 0;
 	pomng.registry.classes = {};
+	pomng.registry.loading = 0;
 
 	// Start polling
 	pomng.poll();
