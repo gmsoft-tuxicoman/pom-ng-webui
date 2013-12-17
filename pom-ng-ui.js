@@ -49,8 +49,8 @@ pomngUI.registry.evtReady = function(event) {
 
 		var addButton = "";
 		if (avail_types.length > 0)
-			addButton = ' <span class="ui-icon ui-icon-circle-plus" id="btn_add_' + cls.name + '" style="display:inline-block" onclick="pomngUI.dialog.instanceAdd(\'' + cls.name + '\')"/>';
-		$("#registry").append('<div id="cls_' + cls.name + '"><span class="ui-icon ui-icon-triangle-1-e" style="display:inline-block"/>' + cls.name + addButton + '<div id="cls_inst_' + cls.name + '" class="ui-widget-content ui-corner-all" style="margin-left:16px"></div></div>');
+			addButton = ' <span class="ui-icon ui-icon-circle-plus icon-btn" id="btn_add_' + cls.name + '" onclick="pomngUI.dialog.instanceAdd(\'' + cls.name + '\')"/>';
+		$("#registry").append('<div id="cls_' + cls.name + '"><span class="ui-icon ui-icon-triangle-1-e icon-btn"/>' + cls.name + addButton + '<div id="cls_inst_' + cls.name + '" class="ui-widget-content ui-corner-all" style="margin-left:16px"></div></div>');
 
 		var instances_name = Object.keys(cls.instances).sort();
 		for (var j = 0; j < instances_name.length; j++)
@@ -71,7 +71,7 @@ pomngUI.registry.updateInstance = function(cls_name, inst_name) {
 	if (inst_elem.length > 0)
 		return; // The element already exists
 
-	var instHtml = '<div id="inst_' + inst_name + '"><span class="ui-icon ui-icon-carat-1-e" style="display:inline-block"/>' + inst_name;
+	var instHtml = '<div id="inst_' + inst_name + '"><span class="ui-icon ui-icon-carat-1-e icon-btn"/>' + inst_name;
 		
 	var inst = pomng.registry.classes[cls_name].instances[inst_name];
 	var p_type = inst.parameters["type"];
@@ -81,7 +81,7 @@ pomngUI.registry.updateInstance = function(cls_name, inst_name) {
 
 	var avail_types = Object.keys(pomng.registry.classes[cls_name].available_types);
 	if (avail_types.length > 0)
-		instHtml += '<span class="ui-icon ui-icon-close" style="display:inline-block" onclick="pomngUI.dialog.instanceRemove(\'' + cls_name + '\', \'' + inst_name + '\')"/>';
+		instHtml += '<span class="ui-icon ui-icon-close icon-btn" onclick="pomngUI.dialog.instanceRemove(\'' + cls_name + '\', \'' + inst_name + '\')"/>';
 
 	instHtml += '</div>';
 
@@ -372,15 +372,15 @@ pomngUI.summary.evtUpdateInstance = function(event) {
 
 	// Start/Stop icon
 	if (running)
-		html += '<span class="ui-icon ui-icon-stop" style="display:inline-block" title="Stop" onclick="pomng.registry.setInstanceParam(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\', \'running\', \'no\')"/>';
+		html += '<span class="ui-icon ui-icon-stop icon-btn" title="Stop" onclick="pomng.registry.setInstanceParam(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\', \'running\', \'no\')"/>';
 	else
-		html += '<span class="ui-icon ui-icon-play" style="display:inline-block" title="Start" onclick="pomng.registry.setInstanceParam(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\', \'running\', \'yes\')"/>';
+		html += '<span class="ui-icon ui-icon-play icon-btn" title="Start" onclick="pomng.registry.setInstanceParam(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\', \'running\', \'yes\')"/>';
 	
 	// Parameter icon
-	html += '<span class="ui-icon ui-icon-gear" style="display:inline-block" title="Parameters" onclick="pomngUI.dialog.instanceParameter(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
+	html += '<span class="ui-icon ui-icon-gear icon-btn" title="Parameters" onclick="pomngUI.dialog.instanceParameter(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
 	
 	// Remove icon
-	html += '<span class="ui-icon ui-icon-close" style="display:inline-block" title="Remove" onclick="pomngUI.dialog.instanceRemove(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
+	html += '<span class="ui-icon ui-icon-close icon-btn" title="Remove" onclick="pomngUI.dialog.instanceRemove(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
 	
 	html += '</td>';
 
@@ -438,9 +438,9 @@ pomngUI.config.evtConfigUpdate = function(event) {
 
 		var config = configs[configs_name[i]];
 		html += '<tr><td>' + config.name + '</td><td>' + config.timestamp + '</td><td>';
-		html += '<span class="ui-icon ui-icon-folder-open" style="display:inline-block" title="Open configuration" onclick="pomngUI.dialog.configOpen(\'' + config.name + '\')"/>';
-		html += '<span class="ui-icon ui-icon-disk" style="display:inline-block" title="Save configuration" onclick="pomngUI.dialog.configOverwrite(\'' + config.name + '\')"/>';
-		html += '<span class="ui-icon ui-icon-trash" style="display:inline-block" title="Delete configuration" onclick="pomngUI.dialog.configDelete(\'' + config.name + '\')"/>';
+		html += '<span class="ui-icon ui-icon-folder-open icon-btn" title="Open configuration" onclick="pomngUI.dialog.configOpen(\'' + config.name + '\')"/>';
+		html += '<span class="ui-icon ui-icon-disk icon-btn" title="Save configuration" onclick="pomngUI.dialog.configOverwrite(\'' + config.name + '\')"/>';
+		html += '<span class="ui-icon ui-icon-trash icon-btn" title="Delete configuration" onclick="pomngUI.dialog.configDelete(\'' + config.name + '\')"/>';
 		html += '</td></tr>';
 	}
 

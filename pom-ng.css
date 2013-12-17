@@ -90,3 +90,8 @@ h1 {
 .no-close .ui-dialog-titlebar-close {
 	display: none
 }
+
+.icon-btn {
+	cursor: pointer;
+	display: inline-block;
+}
