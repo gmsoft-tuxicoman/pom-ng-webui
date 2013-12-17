@@ -165,7 +165,9 @@ pomngUI.dialog.instanceParameter = function(cls_name, inst_name) {
 		if (params_name[i] == 'type' || params_name[i] == 'uid' || params_name[i] == 'running')
 			continue; // No need to display these params
 
-		paramsHtml += '<tr><td>' + params_name[i] + '</td><td>' + params[params_name[i]].type + '</td><td><input id="val_' + params_name[i] + '" type="text" value="' + params[params_name[i]].value + '"/></td></tr>';
+		var param = params[params_name[i]];
+
+		paramsHtml += '<tr><td>' + param.name + '</td><td>' + param.type + '</td><td><input id="val_' + param.name + '" type="text" value="' + param.value + '"/></td><td>' + param.description + '</td></tr>';
 
 	}
 		
@@ -343,15 +345,15 @@ pomngUI.summary.evtUpdateInstance = function(event) {
 
 	// Start/Stop icon
 	if (running)
-		html += '<span class="ui-icon ui-icon-stop" style="display:inline-block" onclick="pomng.registry.setInstanceParam(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\', \'running\', \'no\')"/>';
+		html += '<span class="ui-icon ui-icon-stop" style="display:inline-block" title="Stop" onclick="pomng.registry.setInstanceParam(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\', \'running\', \'no\')"/>';
 	else
-		html += '<span class="ui-icon ui-icon-play" style="display:inline-block" onclick="pomng.registry.setInstanceParam(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\', \'running\', \'yes\')"/>';
+		html += '<span class="ui-icon ui-icon-play" style="display:inline-block" title="Start" onclick="pomng.registry.setInstanceParam(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\', \'running\', \'yes\')"/>';
 	
 	// Parameter icon
-	html += '<span class="ui-icon ui-icon-gear" style="display:inline-block" onclick="pomngUI.dialog.instanceParameter(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
+	html += '<span class="ui-icon ui-icon-gear" style="display:inline-block" title="Parameters" onclick="pomngUI.dialog.instanceParameter(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
 	
 	// Remove icon
-	html += '<span class="ui-icon ui-icon-close" style="display:inline-block" onclick="pomngUI.dialog.instanceRemove(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
+	html += '<span class="ui-icon ui-icon-close" style="display:inline-block" title="Remove" onclick="pomngUI.dialog.instanceRemove(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
 	
 	html += '</td>';
 
