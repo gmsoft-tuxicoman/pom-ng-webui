@@ -45,12 +45,9 @@ pomngUI.registry.evtReady = function(event) {
 	for (var i = 0; i < clss_name.length; i++) {
 		var cls = pomng.registry.classes[clss_name[i]];
 
-		var avail_types = Object.keys(cls.available_types);
-
 		var addButton = "";
-		if (avail_types.length > 0)
-			addButton = ' <span class="ui-icon ui-icon-circle-plus icon-btn" id="btn_add_' + cls.name + '" onclick="pomngUI.dialog.instanceAdd(\'' + cls.name + '\')"/>';
-		$("#registry").append('<div id="cls_' + cls.name + '"><span class="ui-icon ui-icon-triangle-1-e icon-btn"/>' + cls.name + addButton + '<div id="cls_inst_' + cls.name + '" class="ui-widget-content ui-corner-all" style="margin-left:16px"></div></div>');
+		html = '<div id="cls_' + cls.name + '"><span id="cls_icon" class="ui-icon ui-icon-triangle-1-e icon-btn" onclick="pomngUI.registry.instanceToggle(\'' + cls.name + '\')"/><span onclick="pomngUI.registry.classDetail(\'' + cls.name + '\')" style="cursor:pointer">' + cls.name + '</span><div id="cls_inst_' + cls.name + '" class="ui-widget-content ui-corner-all" style="margin-left:16px;display:none;padding-right:3px"></div></div>';
+		$("#registry").append(html);
 
 		var instances_name = Object.keys(cls.instances).sort();
 		for (var j = 0; j < instances_name.length; j++)
@@ -62,6 +59,172 @@ pomngUI.registry.evtReady = function(event) {
 	window.addEventListener("pomng.registry.instance.remove", pomngUI.registry.evtRemoveInstance);
 }
 
+pomngUI.registry.instanceToggle = function(cls_name) {
+
+	var inst_elem = $("#registry #cls_inst_" + cls_name);
+	var icon_elem = $("#registry #cls_" + cls_name + " #cls_icon");
+	if (inst_elem.is(":visible")) {
+		inst_elem.hide();
+		icon_elem.removeClass("ui-icon-triangle-1-s");
+		icon_elem.addClass("ui-icon-triangle-1-e");
+	} else {
+		inst_elem.show();
+		icon_elem.removeClass("ui-icon-triangle-1-e");
+		icon_elem.addClass("ui-icon-triangle-1-s");
+	}
+
+}
+
+pomngUI.registry.classDetail = function(cls_name) {
+
+	if (!$("#registry #cls_inst_" + cls_name).is(":visible"))
+		pomngUI.registry.instanceToggle(cls_name);
+
+	var html = '<h2 class="details">Class ' + cls_name + '</h2>';
+
+	var cls = pomng.registry.classes[cls_name];
+
+
+	// Show the parameters
+	var params_name = Object.keys(cls.parameters).sort();
+
+	html += '<h3 class="details">Parameters :</h3>';
+
+	if (params_name.length > 0) {
+		html += '<table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Value</td><td>Type</td><td>Description</td></tr></thead><tbody>';
+		for (var i = 0; i < params_name.length; i++) {
+			var param = cls.parameters[params_name[i]];
+			html += '<tr><td>' + param.name + '</td><td>' + param.value + '</td><td>' + param.type + '</td><td>' + param.description + '</td></tr>';
+		}
+
+		html += '</tbody></table>';
+
+	} else {
+		html += '<div>No parameter for this class</div>';
+	}
+
+
+	// Show the instances
+	html += '<h3 class="details">Instances :</h3>';
+
+	var instances_name = Object.keys(cls.instances).sort();
+
+	if (instances_name.length > 0) {
+		
+		var inst1_params = cls.instances[instances_name[0]].parameters;
+		var has_type = false;
+		var has_running = false;
+		var has_uid = false;
+
+		html += '<table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td>';
+		
+		if (inst1_params['type'] !== undefined) {
+			html += '<td>Type</td>';
+			has_type = true;
+		}
+			
+		if (inst1_params['running'] !== undefined) {
+			html += '<td>Running</td>';
+			has_running = true;
+		}
+
+		if (inst1_params['uid'] !== undefined) {
+			html += '<td>UID</td>';
+			has_uid = true;
+		}
+			
+		// html += '<td>Description</td>';
+		
+		html += '</tr></thead><tbody>';
+
+		for (var i = 0; i < instances_name.length; i++) {
+			var inst = cls.instances[instances_name[i]];
+			html += '<tr><td>' + inst.name + '</td>';
+
+			if (has_type)
+				html += '<td>' + inst.parameters['type'].value + '</td>';
+			
+			if (has_running)
+				html += '<td>' + inst.parameters['running'].value + '</td>';
+			
+			if (has_uid)
+				html += '<td>' + inst.parameters['uid'].value + '</td>'
+			
+			html += '</tr>';
+		}
+
+		html += '</tbody></table>';
+
+	} else {
+		html += '<div>No instances for this class</div>';
+	}
+
+	// Show the performances
+	html += '<h3 class="details">Performance objects :</h3>';
+
+	var perfs_name = Object.keys(cls.performances).sort();
+
+	if (perfs_name.length > 0) {
+		html += '<table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Unit</td><td>Description</td></tr></thead><tbody>';
+
+		for (var i = 0; i < perfs_name.length; i++) {
+			var perf = cls.performances[perfs_name[i]];
+			html += '<tr><td>' + perf.name + '</td><td>' + perf.type + '</td><td>' + perf.unit + '</td><td>' + perf.description + '</td></tr>';
+		}
+		html += '</tbody></table>';
+
+	} else {
+		html += '<div>No performance object for this class</div>';
+	}
+
+	$("#tab_registry #detail").html(html);
+
+}
+
+pomngUI.registry.instanceDetail = function(cls_name, inst_name) {
+
+	var html = '<h2 class="details">Instance ' + inst_name + ' from class ' + cls_name + '</h2>';
+
+	var inst = pomng.registry.classes[cls_name].instances[inst_name];
+
+	var params_name = Object.keys(inst.parameters).sort();
+
+	html += '<h3 class="details">Parameters :</h3>';
+
+	if (params_name.length > 0) {
+		html += '<table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Value</td><td>Type</td><td>Description</td></tr></thead><tbody>';
+		for (var i = 0; i < params_name.length; i++) {
+			var param = inst.parameters[params_name[i]];
+			html += '<tr><td>' + param.name + '</td><td>' + param.value + '</td><td>' + param.type + '</td><td>' + param.description + '</td></tr>';
+		}
+
+		html += '</tbody></table>';
+
+	} else {
+		html += '<div>No parameter for this instance</div>';
+	}
+
+	// Show the performances
+	html += '<h3 class="details">Performance objects :</h3>';
+
+	var perfs_name = Object.keys(inst.performances).sort();
+
+	if (perfs_name.length > 0) {
+		html += '<table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Unit</td><td>Description</td></tr></thead><tbody>';
+
+		for (var i = 0; i < perfs_name.length; i++) {
+			var perf = inst.performances[perfs_name[i]];
+			html += '<tr><td>' + perf.name + '</td><td>' + perf.type + '</td><td>' + perf.unit + '</td><td>' + perf.description + '</td></tr>';
+		}
+		html += '</tbody></table>';
+
+	} else {
+		html += '<div>No performance object for this class</div>';
+	}
+
+	$("#tab_registry #detail").html(html);
+}
+
 pomngUI.registry.updateInstance = function(cls_name, inst_name) {
 
 	// Add the instance
@@ -71,19 +234,7 @@ pomngUI.registry.updateInstance = function(cls_name, inst_name) {
 	if (inst_elem.length > 0)
 		return; // The element already exists
 
-	var instHtml = '<div id="inst_' + inst_name + '"><span class="ui-icon ui-icon-carat-1-e icon-btn"/>' + inst_name;
-		
-	var inst = pomng.registry.classes[cls_name].instances[inst_name];
-	var p_type = inst.parameters["type"];
-
-	if (p_type !== undefined)
-		instHtml += " (" + p_type.value + ")";
-
-	var avail_types = Object.keys(pomng.registry.classes[cls_name].available_types);
-	if (avail_types.length > 0)
-		instHtml += '<span class="ui-icon ui-icon-close icon-btn" onclick="pomngUI.dialog.instanceRemove(\'' + cls_name + '\', \'' + inst_name + '\')"/>';
-
-	instHtml += '</div>';
+	var instHtml = '<div id="inst_' + inst_name + '"><span class="ui-icon ui-icon-carat-1-e icon-btn"/><span onclick="pomngUI.registry.instanceDetail(\'' + cls_name + '\', \'' + inst_name + '\')" style="cursor:pointer">' + inst_name + '</div>';
 
 	$("#registry #cls_inst_" + cls_name).append(instHtml);
 
