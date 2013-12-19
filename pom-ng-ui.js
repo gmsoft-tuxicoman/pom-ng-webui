@@ -46,7 +46,7 @@ pomngUI.registry.evtReady = function(event) {
 		var cls = pomng.registry.classes[clss_name[i]];
 
 		var addButton = "";
-		html = '<div id="cls_' + cls.name + '"><span id="cls_icon" class="ui-icon ui-icon-triangle-1-e icon-btn" onclick="pomngUI.registry.instanceToggle(\'' + cls.name + '\')"/><span onclick="pomngUI.registry.classDetail(\'' + cls.name + '\')" style="cursor:pointer">' + cls.name + '</span><div id="cls_inst_' + cls.name + '" class="ui-widget-content ui-corner-all" style="margin-left:16px;display:none;padding-right:3px"></div></div>';
+		var html = '<div id="cls_' + cls.name + '"><span id="cls_icon" class="ui-icon ui-icon-triangle-1-e icon-btn" onclick="pomngUI.registry.instanceToggle(\'' + cls.name + '\')"/><span onclick="pomngUI.registry.classDetail(\'' + cls.name + '\')" style="cursor:pointer">' + cls.name + '</span><div id="cls_inst_' + cls.name + '" class="ui-widget-content ui-corner-all" style="margin-left:16px;display:none;padding-right:3px"></div></div>';
 		$("#registry").append(html);
 
 		var instances_name = Object.keys(cls.instances).sort();
