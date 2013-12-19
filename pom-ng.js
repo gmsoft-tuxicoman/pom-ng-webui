@@ -166,6 +166,8 @@ pomng.init = function() {
 	pomng.registry.classes = {};
 	pomng.registry.loading = 0;
 
+	pomng.poll_failed = 0;
+
 	// Start polling
 	pomng.poll();
 
@@ -174,9 +176,12 @@ pomng.init = function() {
 pomng.poll = function() {
 
 	$.xmlrpc({
-		url: this.url,
+		url: pomng.url,
 		methodName: "core.serialPoll",
 		success: function (response, status, jqXHR) {
+
+			pomng.poll_failed = 0;
+
 			var serials = response[0];
 
 			if (pomng.serials["registry"] != serials["registry"]) {
@@ -196,9 +201,13 @@ pomng.poll = function() {
 
 pomng.poll_error = function(jqXHR, status, error) {
 
-	if (jqXHR.status == 502 || jqXHR.status == 503) {
-		// Most probably a timeout, restart polling
-		pomng.poll();
+	if ((jqXHR.status == 502 || jqXHR.status == 503) && pomng.poll_failed < 10) {
+		// Most probably a timeout, restart polling after some time
+		pomng.poll_failed++;
+		setTimeout(pomng.poll, 1000);
+
+		// If there is no answer in 30 sec, it means the polling is not returning
+		setTimeout(function() { pomng.poll_failed = 0; }, 30000);
 		return;
 	}
 
