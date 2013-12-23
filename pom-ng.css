@@ -1,4 +1,14 @@
 
+body {
+	margin: 0px;
+}
+
+div#root {
+	padding-left: 8px;
+	padding-right: 8px;
+	overflow: auto;
+}
+
 h1 {
 	text-align:center;
 }
@@ -99,4 +109,49 @@ h3.details {
 .icon-btn {
 	cursor: pointer;
 	display: inline-block;
+}
+
+
+.logs {
+	position: fixed;
+	bottom: 0px;
+	height: 11em;
+	width: 100%;
+	clear: both;
+}
+
+.logs-min {
+	height: 1.3em;
+}
+
+.logs-full {
+	height: 100%;
+}
+
+.logs-hdr {
+	height: 1.3em;
+}
+
+.logs-content {
+	overflow-y: auto;
+	font-size: small;
+}
+
+#tbl_logs tr:nth-child(odd) {
+	background: #DADADA;
+}
+
+.log_err {
+	color: red;
+}
+
+.log_warn {
+	color: orange;
+}
+
+.log_info {
+	color: black;
+}
+.log_debug {
+	color: blue;
 }

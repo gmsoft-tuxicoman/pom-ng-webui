@@ -15,6 +15,7 @@ pomngUI.init = function () {
 	pomngUI.dialog.init();
 	pomngUI.registry.init();
 	pomngUI.config.init();
+	pomngUI.logs.init();
 
 	$("#menu").tabs();
 	
@@ -599,4 +600,132 @@ pomngUI.config.evtConfigUpdate = function(event) {
 
 }
 
+/*
+ * Logs view
+ */
 
+pomngUI.logs = {};
+
+pomngUI.logs.init = function() {
+
+	window.addEventListener("pomng.logs.new", function(event) { pomngUI.logs.append(event.detail.id); });
+	$("#logs_content").resize(pomngUI.logs.resize);
+	window.addEventListener("pomng.registry.ready", function (event) { $("#logs_content").show(); pomngUI.logs.resize();});
+
+	pomngUI.logs.display_level = 3;
+}
+
+pomngUI.logs.append = function(id) {
+	
+
+	var log = pomng.logs.entries[id];
+
+	if (log.level > pomngUI.logs.display_level)
+		return;
+
+	var cls;
+	switch (log.level) {
+		case 1:
+			cls = "err";
+			break;
+		case 2:
+			cls = "warn";
+			break;
+		case 3:
+			cls = "info";
+			break;
+		case 4:
+			cls = "debug";
+			break;
+	}
+
+	var date = log.timestamp.getFullYear()  + "/" + log.timestamp.getMonth() + "/" + log.timestamp.getDate() + " " + log.timestamp.toLocaleTimeString();
+
+	var html = '<tr class="log_' + cls + '"><td>' + date + '</td><td>'  + log.file + '</td><td>' + log.data + '</td></tr>';
+
+	$("#tbl_logs").append(html);
+
+
+}
+
+pomngUI.logs.update = function() {
+
+	$("#tbl_logs").html('');
+
+	var log_entries = Object.keys(pomng.logs.entries);
+	for (var i = 0; i < log_entries.length; i++) {
+		pomngUI.logs.append(log_entries[i]);
+	}
+
+}
+
+pomngUI.logs.size = function(size) {
+
+
+	if (size == 'min') {
+		$("#logs").addClass("logs-min");
+		$("#logs").removeClass("logs-full");
+		$("#log_icon_min").hide();
+		$("#log_icon_normal").show();
+		$("#log_icon_full").show();
+		$("#log_icon_normal2").hide();
+		$("#root").show();
+	} else if (size == 'normal') {
+		$("#logs").removeClass("logs-min");
+		$("#logs").removeClass("logs-full");
+		$("#log_icon_min").show();
+		$("#log_icon_normal").hide();
+		$("#log_icon_full").show();
+		$("#log_icon_normal2").hide();
+		$("#root").show();
+		pomngUI.logs.resize();
+	} else { // Full
+		$("#logs").removeClass("logs-min");
+		$("#logs").addClass("logs-full");
+		$("#log_icon_min").show();
+		$("#log_icon_normal").hide();
+		$("#log_icon_full").hide();
+		$("#log_icon_normal2").show();
+
+		$("#root").hide();
+		pomngUI.logs.resize();
+	}
+
+
+}
+
+pomngUI.logs.resize = function() {
+	
+	var height = $("#logs").innerHeight() - $("#logs_hdr").outerHeight();
+	$("#logs_content").height(height);
+
+	var wh = $(window).height()
+	var lh = $("#logs").outerHeight();
+	$("#root").height(wh - lh);
+
+
+}
+
+pomngUI.logs.paramDialog = function() {
+
+	$("#dlg_log_param #dbg_lvl").val(pomngUI.logs.display_level);
+
+	$("#dlg_log_param").dialog({
+		resizable: false,
+		modal: true,
+		width: "auto",
+		title: "Log configuration",
+
+		buttons: {
+			Ok: function() {
+				pomngUI.logs.display_level = parseInt($("#dlg_log_param #dbg_lvl").val());
+				pomngUI.logs.update();
+				$(this).dialog("close");
+			},
+			Cancel: function() {
+				$(this).dialog("close");
+			}
+		}
+
+	});
+}

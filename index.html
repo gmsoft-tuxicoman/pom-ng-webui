@@ -64,6 +64,23 @@
 		</div>
 
 	</div>
+
+
+</div>
+
+<div id="logs" class="ui-widget logs logs-min">
+	<div id="logs_hdr" class="ui-widget-header logs-hdr">
+	Logs
+	<span style="float:right">
+		<span class="ui-icon ui-icon-gear icon-btn" onclick="pomngUI.logs.paramDialog()"></span>
+		<span id="log_icon_min" class="ui-icon ui-icon-minus icon-btn" style="display:none" onclick="pomngUI.logs.size('min')"></span>
+		<span id="log_icon_normal" class="ui-icon ui-icon-plus icon-btn" onclick="pomngUI.logs.size('normal')"></span>
+		<span id="log_icon_full" class="ui-icon ui-icon-arrowthickstop-1-n icon-btn" onclick="pomngUI.logs.size('full')"></span>
+		<span id="log_icon_normal2" class="ui-icon ui-icon-arrowthickstop-1-s icon-btn" style="display:none" onclick="pomngUI.logs.size('normal')"></span>
+	</span>
+	
+	</div>
+	<div class="ui-widget-content logs-content" id="logs_content" style="display:none"><table id="tbl_logs" style="width:100%"></table></div>
 </div>
 
 <div id="dlg_add" style="display:none">
@@ -89,6 +106,17 @@
 	<p> Save configuration as :<br/>
 	<input id="config_name" type="text" title="Configuration name"/>
 	</p>
+</div>
+
+<div id="dlg_log_param" style="display:none">
+	<p>Log configuration:</p>
+	<p>Show level up to : <select id="dbg_lvl">
+		<option value="1">Error</option>
+		<option value="2">Warning</option>
+		<option value="3">Info</option>
+		<option value="4">Debug</option>
+	</select></p>
+
 </div>
 
 <div id="dlg_loading"><p>Loading registry, please be patient ...<br/><span id="remaining"></span></p></div>

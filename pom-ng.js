@@ -1,6 +1,7 @@
 
 var pomng = {};
 pomng.registry = {};
+pomng.logs = {};
 
 pomng.title = "POM-NG WebUI";
 pomng.url = "/RPC2";
@@ -163,13 +164,36 @@ pomng.init = function() {
 
 	pomng.serials = [];
 	pomng.serials["main"] = 0;
+	pomng.serials["log"] = 0;
 	pomng.registry.classes = {};
 	pomng.registry.loading = 0;
+
+	pomng.logs.entries = {};
 
 	pomng.poll_failed = 0;
 
 	// Start polling
 	pomng.poll();
+
+}
+
+
+
+pomng.logs.update = function() {
+
+	pomng.call("core.getLog",
+		function (response, status, jqXHR) {
+			var logs = response[0];
+
+			for (var i = 0; i < logs.length; i++) {
+				var log = logs[i];
+				pomng.logs.entries[log.id] = log;
+				var event = new CustomEvent("pomng.logs.new", { detail: { id: log.id } });
+				window.dispatchEvent(event);
+			}
+
+		},
+		[ pomng.serials["log"] ]);
 
 }
 
@@ -186,6 +210,10 @@ pomng.poll = function() {
 
 			if (pomng.serials["registry"] != serials["registry"]) {
 				pomng.registry.update();
+			}
+
+			if (pomng.serials["log"] != serials["log"]) {
+				pomng.logs.update();
 			}
 
 			pomng.serials = serials;
