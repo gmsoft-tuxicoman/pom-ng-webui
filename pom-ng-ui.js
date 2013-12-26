@@ -161,24 +161,94 @@ pomngUI.registry.classDetail = function(cls_name) {
 	}
 
 	// Show the performances
-	html += '<h3 class="details">Performance objects :</h3>';
+	html += '<div><h3 class="details">Performance objects :</h3>';
 
 	var perfs_name = Object.keys(cls.performances).sort();
 
+	var perfs_to_fetch = [];
+
 	if (perfs_name.length > 0) {
-		html += '<table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Unit</td><td>Description</td></tr></thead><tbody>';
+
+		html += '<span class="ui-icon ui-icon-refresh icon-btn" title="Refresh" onclick="pomngUI.registry.refreshPerf(\'' + cls.name + '\')"></span></div>';
+
+		html += '<table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Value</td><td>Unit</td><td>Description</td></tr></thead><tbody>';
 
 		for (var i = 0; i < perfs_name.length; i++) {
 			var perf = cls.performances[perfs_name[i]];
-			html += '<tr><td>' + perf.name + '</td><td>' + perf.type + '</td><td>' + perf.unit + '</td><td>' + perf.description + '</td></tr>';
+			html += '<tr><td>' + perf.name + '</td><td>' + perf.type + '</td><td id="td_perf_cls_' + cls.name + '_' + perf.name + '">Fetching ...</td><td>' + perf.unit + '</td><td>' + perf.description + '</td></tr>';
+			perfs_to_fetch.push({class: cls.name, perf: perf.name});
 		}
 		html += '</tbody></table>';
 
 	} else {
-		html += '<div>No performance object for this class</div>';
+		html += '</div><div>No performance object for this class</div>';
 	}
 
 	$("#tab_registry #detail").html(html);
+
+	pomng.call("registry.getPerfs", pomngUI.registry.updatePerf, [ perfs_to_fetch ]);
+
+}
+
+pomngUI.registry.refreshPerf = function(cls_name, inst_name) {
+
+	var perfs;
+
+	if (inst_name !== undefined) {
+		perfs = pomng.registry.classes[cls_name].instances[inst_name].performances;
+	} else {
+		perfs = pomng.registry.classes[cls_name].performances;
+	}
+	
+	var perfs_to_fetch = [];
+
+	var perfs_name = Object.keys(perfs).sort();
+
+	if (perfs_name.length < 0)
+		return;
+
+	for (var i = 0; i < perfs_name.length; i++) {
+		var perf = perfs[perfs_name[i]];
+
+		var elem = '#td_perf_';
+		if ('instance' in perf) {
+			elem += 'inst_' + perf['class'] + '_' + perf['instance'];
+		} else {
+			elem += 'cls_' + perf['class'];
+		}
+		elem += '_' + perf['perf'];
+
+		$(elem).html('Refreshing ...');
+
+
+		if (inst_name !== undefined) {
+			perfs_to_fetch.push({class: cls_name, instance: inst_name, perf: perf.name});
+		} else {
+			perfs_to_fetch.push({class: cls_name, perf: perf.name});
+		}
+	}
+
+	pomng.call("registry.getPerfs", pomngUI.registry.updatePerf, [ perfs_to_fetch ]);
+
+}
+
+pomngUI.registry.updatePerf = function(response, status, jqXHR) {
+	
+	var perfs = response[0]['perfs'];
+	var perf_names = Object.keys(perfs);
+
+	for (var i = 0; i < perf_names.length; i++) {
+		var perf = perfs[perf_names[i]];
+		var elem = '#td_perf_';
+		if ('instance' in perf) {
+			elem += 'inst_' + perf['class'] + '_' + perf['instance'];
+		} else {
+			elem += 'cls_' + perf['class'];
+		}
+		elem += '_' + perf['perf'];
+
+		$(elem).html(perf['value']);
+	}
 
 }
 
@@ -206,24 +276,31 @@ pomngUI.registry.instanceDetail = function(cls_name, inst_name) {
 	}
 
 	// Show the performances
-	html += '<h3 class="details">Performance objects :</h3>';
+	html += '<div><h3 class="details">Performance objects :</h3>';
 
 	var perfs_name = Object.keys(inst.performances).sort();
 
+	var perfs_to_fetch = [];
+
 	if (perfs_name.length > 0) {
-		html += '<table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Unit</td><td>Description</td></tr></thead><tbody>';
+		html += '<span class="ui-icon ui-icon-refresh icon-btn" title="Refresh" onclick="pomngUI.registry.refreshPerf(\'' + cls_name + '\',\'' + inst.name + '\')"></span></div>';
+
+		html += '<table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Value</td><td>Unit</td><td>Description</td></tr></thead><tbody>';
 
 		for (var i = 0; i < perfs_name.length; i++) {
 			var perf = inst.performances[perfs_name[i]];
-			html += '<tr><td>' + perf.name + '</td><td>' + perf.type + '</td><td>' + perf.unit + '</td><td>' + perf.description + '</td></tr>';
+			html += '<tr><td>' + perf.name + '</td><td>' + perf.type + '</td><td id="td_perf_inst_' + cls_name + '_' + inst.name + '_' + perf.name + '">Fetching ...</td><td>' + perf.unit + '</td><td>' + perf.description + '</td></tr>';
+			perfs_to_fetch.push({class: cls_name, instance: inst_name, perf: perf.name});
 		}
 		html += '</tbody></table>';
 
 	} else {
-		html += '<div>No performance object for this class</div>';
+		html += '</div><div>No performance object for this class</div>';
 	}
 
 	$("#tab_registry #detail").html(html);
+
+	pomng.call("registry.getPerfs", pomngUI.registry.updatePerf, [ perfs_to_fetch ]);
 }
 
 pomngUI.registry.updateInstance = function(cls_name, inst_name) {
@@ -678,7 +755,6 @@ pomngUI.logs.size = function(size) {
 		$("#log_icon_full").show();
 		$("#log_icon_normal2").hide();
 		$("#root").show();
-		pomngUI.logs.resize();
 	} else { // Full
 		$("#logs").removeClass("logs-min");
 		$("#logs").addClass("logs-full");
@@ -686,10 +762,9 @@ pomngUI.logs.size = function(size) {
 		$("#log_icon_normal").hide();
 		$("#log_icon_full").hide();
 		$("#log_icon_normal2").show();
-
 		$("#root").hide();
-		pomngUI.logs.resize();
 	}
+	pomngUI.logs.resize();
 
 
 }

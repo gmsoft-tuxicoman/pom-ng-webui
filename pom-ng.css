@@ -18,6 +18,7 @@ h2.details {
 }
 h3.details {
 	margin-bottom: 0px;
+	display: inline-block;
 }
 
 #toolbar {
@@ -76,6 +77,7 @@ h3.details {
 
 .ui-tabs.ui-tabs-vertical .ui-tabs-nav li a:hover {
 	cursor: pointer;
+	display: inline-block;
 }
 
 
