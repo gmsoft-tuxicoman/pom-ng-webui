@@ -1,10 +1,34 @@
 
-var pomng = {};
-pomng.registry = {};
-pomng.logs = {};
+$(document).ready( function() {
+	pomngUI.init();
+	pomng.init();
+});
 
+/*
+ * Core stuff
+ */
+var pomng = {};
 pomng.title = "POM-NG WebUI";
 pomng.url = "/RPC2";
+
+pomng.init = function() {
+
+
+	pomng.serials = [];
+	pomng.serials["main"] = 0;
+	pomng.serials["log"] = 0;
+	pomng.registry.classes = {};
+	pomng.registry.loading = 0;
+
+	pomng.logs.entries = {};
+
+	pomng.poll_failed = 0;
+
+	// Start polling
+	pomng.poll();
+
+}
+
 pomng.call = function(method, success, params, context) {
 	$.xmlrpc({
 		url: this.url,
@@ -20,6 +44,65 @@ pomng.call_error = function(jqXHR, status, error) {
 	alert("An error occured : " + error);
 }
 
+pomng.poll = function() {
+
+	$.xmlrpc({
+		url: pomng.url,
+		methodName: "core.serialPoll",
+		success: function (response, status, jqXHR) {
+
+			pomng.poll_failed = 0;
+
+			var serials = response[0];
+
+			if (pomng.serials["registry"] != serials["registry"]) {
+				pomng.registry.update();
+			}
+
+			if (pomng.serials["log"] != serials["log"]) {
+				pomng.logs.update();
+			}
+
+			pomng.serials = serials;
+
+
+			pomng.poll();
+
+		},
+		params: [ pomng.serials["main"] ],
+		error: pomng.poll_error,
+	});
+}
+
+pomng.poll_error = function(jqXHR, status, error) {
+
+	if ((jqXHR.status == 502 || jqXHR.status == 503) && pomng.poll_failed < 10) {
+		// Most probably a timeout, restart polling after some time
+		pomng.poll_failed++;
+		setTimeout(pomng.poll, 1000);
+
+		// If there is no answer in 30 sec, it means the polling is not returning
+		setTimeout(function() { pomng.poll_failed = 0; }, 30000);
+		return;
+	}
+
+	if (jqXHR.status == 0) {
+		// The request was aborted
+		// Happens when the page is reloaded
+		return;
+	}
+
+	
+	var event = new CustomEvent("pomng.conn_error", { detail: { status: jqXHR.status, error: error }});
+	window.dispatchEvent(event);
+
+	alert("Polling failed ! Status : " + jqXHR.status + " | " + error);
+}
+
+/*
+ * Registry related functions
+ */
+pomng.registry = {};
 pomng.registry.nameMap = function(lst, key_str) {
 
 	if (lst === undefined)
@@ -159,26 +242,12 @@ pomng.registry.update = function() {
 	);
 }
 
-pomng.init = function() {
 
+/*
+ * Log related stuff
+ */
 
-	pomng.serials = [];
-	pomng.serials["main"] = 0;
-	pomng.serials["log"] = 0;
-	pomng.registry.classes = {};
-	pomng.registry.loading = 0;
-
-	pomng.logs.entries = {};
-
-	pomng.poll_failed = 0;
-
-	// Start polling
-	pomng.poll();
-
-}
-
-
-
+pomng.logs = {};
 pomng.logs.update = function() {
 
 	pomng.call("core.getLog",
@@ -197,63 +266,4 @@ pomng.logs.update = function() {
 
 }
 
-pomng.poll = function() {
-
-	$.xmlrpc({
-		url: pomng.url,
-		methodName: "core.serialPoll",
-		success: function (response, status, jqXHR) {
-
-			pomng.poll_failed = 0;
-
-			var serials = response[0];
-
-			if (pomng.serials["registry"] != serials["registry"]) {
-				pomng.registry.update();
-			}
-
-			if (pomng.serials["log"] != serials["log"]) {
-				pomng.logs.update();
-			}
-
-			pomng.serials = serials;
-
-
-			pomng.poll();
-
-		},
-		params: [ pomng.serials["main"] ],
-		error: pomng.poll_error,
-	});
-}
-
-pomng.poll_error = function(jqXHR, status, error) {
-
-	if ((jqXHR.status == 502 || jqXHR.status == 503) && pomng.poll_failed < 10) {
-		// Most probably a timeout, restart polling after some time
-		pomng.poll_failed++;
-		setTimeout(pomng.poll, 1000);
-
-		// If there is no answer in 30 sec, it means the polling is not returning
-		setTimeout(function() { pomng.poll_failed = 0; }, 30000);
-		return;
-	}
-
-	if (jqXHR.status == 0) {
-		// The request was aborted
-		// Happens when the page is reloaded
-		return;
-	}
-
-	
-	var event = new CustomEvent("pomng.conn_error", { detail: { status: jqXHR.status, error: error }});
-	window.dispatchEvent(event);
-
-	alert("Polling failed ! Status : " + jqXHR.status + " | " + error);
-}
-
-$(document).ready( function() {
-	pomngUI.init();
-	pomng.init();
-});
 
