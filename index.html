@@ -9,6 +9,7 @@
 	<script src="jquery.xmlrpc.js"></script>
 	<script src="pom-ng.js"></script>
 	<script src="pom-ng-ui.js"></script>
+	<script src="weboutput.js"></script>
 </head>
 <body>
 
@@ -19,6 +20,7 @@
 	<div id="menu" class="ui-widget">
 		<ul>
 			<li><a href="#tab_summary">Summary</a></li>
+			<li><a href="#tab_weboutput">Web output</a></li>
 			<li><a href="#tab_registry">Registry</a></li>
 			<li><a href="#tab_config">Load/Save</a></li>
 		</ul>
@@ -42,6 +44,21 @@
 				<tbody></tbody>
 			</table>
 
+		</div>
+
+		<div id="tab_weboutput">
+			<div id="weboutput">
+				<ul>
+					<li><a href="#weboutput_home">Home</a></li>
+				</ul>
+				<div id="weboutput_home">
+					<h2>Available outputs :</h2>
+					<table class="ui-widget ui-widget-content ui-table">
+						<thead><tr class="ui-widget-header"><td>Name</td><td>Description</td></tr></thead>
+						<tbody id="weboutput_list"></tbody>
+					</table>
+				</div>
+			</div>
 		</div>
 
 
@@ -117,6 +134,18 @@
 		<option value="4">Debug</option>
 	</select></p>
 
+</div>
+
+<div id="dlg_weboutput_add" style="display:none">
+	<p>Add a web output of type <span id="#type"></span></p>
+	<p>Name : <input type="text" id="name"/></p>
+	<div id="parameters">
+	<p>Parameters :</p>
+	<table class="ui-widget ui-widget-content ui-table">
+		<thead><tr class="ui-widget-header"><td>Name</td><td>Value</td></tr></thead>
+		<tbody id="tbl_param"></tbody>
+	</table>
+	</div>
 </div>
 
 <div id="dlg_loading"><p>Loading registry, please be patient ...<br/><span id="remaining"></span></p></div>

@@ -1,7 +1,7 @@
 
 var pomngUI = {};
 
-pomngUI.init = function () {
+pomngUI.init = function() {
 
 
 	// Update the title
@@ -16,6 +16,7 @@ pomngUI.init = function () {
 	pomngUI.registry.init();
 	pomngUI.config.init();
 	pomngUI.logs.init();
+	pomngUI.weboutput.init();
 
 	$("#menu").tabs();
 	
@@ -26,6 +27,11 @@ pomngUI.init = function () {
 
 }
 
+pomngUI.timeval_toString = function(tv) {
+	var date = new Date();
+	date.setTime((tv['sec'] * 1000) + (tv['usec'] / 1000));
+	return date.getFullYear()  + "/" + (date.getMonth() + 1) + "/" + date.getDate() + " " + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2) + "." + date.getMilliseconds();
+}
 
 /*
  * Registry view
@@ -234,7 +240,7 @@ pomngUI.registry.refreshPerf = function(cls_name, inst_name) {
 
 pomngUI.registry.updatePerf = function(response, status, jqXHR) {
 	
-	var perfs = response[0]['perfs'];
+	var perfs = response[0];
 	var perf_names = Object.keys(perfs);
 
 	for (var i = 0; i < perf_names.length; i++) {
@@ -716,7 +722,7 @@ pomngUI.logs.append = function(id) {
 			break;
 	}
 
-	var date = log.timestamp.getFullYear()  + "/" + log.timestamp.getMonth() + "/" + log.timestamp.getDate() + " " + log.timestamp.toLocaleTimeString();
+	var date = log.timestamp.getFullYear()  + "/" + (log.timestamp.getMonth() + 1) + "/" + log.timestamp.getDate() + " " + log.timestamp.toLocaleTimeString();
 
 	var html = '<tr class="log_' + cls + '"><td>' + date + '</td><td>'  + log.file + '</td><td>' + log.data + '</td></tr>';
 
@@ -804,3 +810,98 @@ pomngUI.logs.paramDialog = function() {
 
 	});
 }
+
+/*
+ * Web outputs
+ */
+
+pomngUI.weboutput = {};
+
+pomngUI.weboutput.init = function() {
+	var tabs = $("#weboutput").tabs();
+	tabs.delegate("span.ui-icon-close", "click", function() {
+		var id = $(this).closest("li").attr("aria-controls");
+		var name = pomngUI.weboutput.outputs[id].output_name;
+		pomngUI.dialog.confirm('Remove web output ' + name + ' ?',
+			'Are you sure you want to remove web output ' + name + ' ?',
+			id, function(id) {
+				pomngUI.weboutput.outputs[id].cleanup();
+				$("#weboutput li#li_"+id).remove();
+				$("#weboutput div#"+id).remove();
+				$("#weboutput").tabs("refresh");
+				
+			});
+		});
+
+	var output_names = weboutput.outputs;
+	pomngUI.weboutput.outputs = [];
+
+	var html = "";
+	for (var i = 0; i < output_names.length; i++) {
+		html += '<tr><td><a href="javascript:pomngUI.weboutput.add(\'' + output_names[i] + '\')">' + output_names[i] + '</a></td><td>' + weboutput[output_names[i]].description + '</td></tr>';
+	}
+
+	$("#weboutput_list").html(html);
+}
+
+pomngUI.weboutput.add = function(type) {
+
+
+	if ('parameters' in weboutput[type]) {
+
+		var params = Object.keys(weboutput[type].parameters).sort();
+
+		var param_html = "";
+
+		for (var i = 0; i < params.length; i++) {
+			var param = weboutput[type].parameters[i];
+			param_html += '<tr><td>' + param.name + '</td><td>';
+
+			if (param.values) {
+				param_html += '<select>';
+				for (var j = 0; j < param.values.length; j++) {
+					param_html += '<option value="' + param.values[j] + '">' + param.values[j] + '</option>';
+				}
+				param_html += '</select>';
+			} else {
+				param_html += '<input type="text"/>';
+			}
+		}
+
+		$("#dlg_weboutput_add #tbl_param").html(param_html);
+		$("#dlg_weboutput_add #parameters").show();
+	} else {
+		$("#dlg_weboutput_add #parameters").hide();
+	}
+
+
+	$("#dlg_weboutput_add").dialog({
+		resizable: false,
+		modal: true,
+		width: "auto",
+		title: "Add a web output",
+
+		buttons: {
+			Ok: function() {
+				var elem_weboutput = $("#weboutput");
+				var name = $("#dlg_weboutput_add #name").val();
+				weboutput[type].counter++;
+				var id = type + '-' + weboutput[type].counter;
+				elem_weboutput.find(".ui-tabs-nav").append('<li id="li_' + id + '"><a href="#' + id + '">Output ' + name + '</a><span class="ui-icon ui-icon-close icon-btn"></span></li>');
+				elem_weboutput.append('<div id="' + id + '"><p>' + name + ' output content</p></div>');
+				elem_weboutput.tabs("refresh");
+				pomngUI.weboutput.outputs[id] = new weboutput[type]($("#weboutput #" + id));
+				pomngUI.weboutput.outputs[id].output_name = name;
+				
+				$(this).dialog("close");
+			},
+			Cancel: function() {
+				$(this).dialog("close");
+			}
+		}
+
+
+	});
+
+}
+
