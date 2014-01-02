@@ -278,9 +278,9 @@ pomng.monitor.evt_listeners = {};
 pomng.monitor.sess_id = -1;
 pomng.monitor.eventListenerRegister = function(name, callback, context) {
 
-	if (pomng.monitor.sess_id < 0) {
+	if (pomng.monitor.sess_id == -1) {
 		// Start a monitor session
-		pomng.monitor.sess_id = -1;
+		pomng.monitor.sess_id = -2;
 		pomng.call("evtmon.start", 
 			function(response, status, jqXHR) {
 				pomng.monitor.sess_id = response[0];
@@ -329,7 +329,7 @@ pomng.monitor.eventListenerUnregister = function(name, context) {
 	if (Object.keys(pomng.monitor.evt_listeners).length == 0) {
 		// Nothing is being monitored. Stop polling
 		pomng.call("evtmon.stop", null, [ pomng.monitor.sess_id ]);
-		
+		pomng.monitor.sess_id = -1;		
 	}
 
 
