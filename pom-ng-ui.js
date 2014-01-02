@@ -834,7 +834,7 @@ pomngUI.weboutput.init = function() {
 		});
 
 	var output_names = weboutput.outputs;
-	pomngUI.weboutput.outputs = [];
+	pomngUI.weboutput.outputs = {};
 
 	var html = "";
 	for (var i = 0; i < output_names.length; i++) {
@@ -867,7 +867,7 @@ pomngUI.weboutput.add = function(type) {
 				param_html += '<input type="text"/>';
 			}
 		}
-
+		
 		$("#dlg_weboutput_add #tbl_param").html(param_html);
 		$("#dlg_weboutput_add #parameters").show();
 	} else {
@@ -875,6 +875,8 @@ pomngUI.weboutput.add = function(type) {
 	}
 
 
+	// Default the name to the output name
+	$("#dlg_weboutput_add #name").val(type);
 	$("#dlg_weboutput_add").dialog({
 		resizable: false,
 		modal: true,
@@ -883,8 +885,18 @@ pomngUI.weboutput.add = function(type) {
 
 		buttons: {
 			Ok: function() {
-				var elem_weboutput = $("#weboutput");
 				var name = $("#dlg_weboutput_add #name").val();
+				
+				// Check if an input already exists
+				var ids = Object.keys(pomngUI.weboutput.outputs);
+				for (var i = 0; i < ids.length; i++) {
+					if (pomngUI.weboutput.outputs[ids[i]].output_name == name) {
+						alert("A web output with the name '" + name + "' already exists.");
+						return;
+					}
+				}
+
+				var elem_weboutput = $("#weboutput");
 				weboutput[type].counter++;
 				var id = type + '-' + weboutput[type].counter;
 				elem_weboutput.find(".ui-tabs-nav").append('<li id="li_' + id + '"><a href="#' + id + '">Output ' + name + '</a><span class="ui-icon ui-icon-close icon-btn"></span></li>');
