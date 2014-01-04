@@ -106,8 +106,21 @@ pomngUI.registry.classDetail = function(cls_name) {
 
 		html += '</tbody></table>';
 
-	} else {
+		} else {
 		html += '<div>No parameter for this class</div>';
+	}
+
+	// Show the available instance types
+	
+	var types_name = Object.keys(cls.available_types).sort();
+	if (types_name.length > 0) {
+		html += '<h3 class="details">Available instance types :</h3><table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Description</td></tr></thead><tbody>';
+		for (var i = 0; i < types_name.length; i++) {
+			var type = cls.available_types[types_name[i]];
+			html += '<tr><td><a href="javascript:pomngUI.dialog.instanceAdd(\'' + cls_name + '\', \'' + type.name + '\')">' + type.name + '</a></td><td>' + type.description + '</td></tr>';
+		}
+		html += '</tbody></table>';
+
 	}
 
 
@@ -380,15 +393,25 @@ pomngUI.dialog.evtUpdateInstance = function(event) {
 
 }
 
-pomngUI.dialog.instanceAdd = function(cls_name) {
+pomngUI.dialog.instanceAdd = function(cls_name, inst_type) {
 
-	
-	var options = ""
-	var avail_types = Object.keys(pomng.registry.classes[cls_name].available_types);
-	for (var i = 0; i < avail_types.length; i++)
-		options += '<option value="' + avail_types[i] + '">' + avail_types[i] + '</option>';
 
-	$("#dlg_add #instance_type").html(options);
+	if (inst_type === undefined) {
+		var options = '<select id="val">';
+		var avail_types = Object.keys(pomng.registry.classes[cls_name].available_types);
+		for (var i = 0; i < avail_types.length; i++)
+			options += '<option value="' + avail_types[i] + '">' + avail_types[i] + '</option>';
+		options += "</select>";
+		$("#dlg_add #instance_type").html(options);
+		$("#dlg_add #description").text(pomng.registry.classes[cls_name].available_types[avail_types[0]].description);
+
+		$("#dlg_add #instance_type #val").change( function () { $("#dlg_add #description").text(pomng.registry.classes[cls_name].available_types[$("#dlg_add #instance_type #val").val()].description); } );
+
+	} else {
+		$("#dlg_add #instance_type").html('<input type="hidden" id="val" value="' + inst_type + '"/>' + inst_type);
+		$("#dlg_add #description").text(pomng.registry.classes[cls_name].available_types[inst_type].description);
+
+	}
 	$("#dlg_add #instance_name").val("");
 	$("#dlg_add").dialog({
 		resizable: false,
@@ -398,7 +421,7 @@ pomngUI.dialog.instanceAdd = function(cls_name) {
 
 		buttons: {
 			"Add": function() {
-				var type = $("#dlg_add #instance_type").val();
+				var type = $("#dlg_add #instance_type #val").val();
 				var name = $("#dlg_add #instance_name").val();
 				if (name.length == 0) {
 					alert("You must specify a name");
