@@ -374,6 +374,28 @@ pomngUI.dialog.init = function() {
 		window.removeEventListener("pomng.registry.instance.update", pomngUI.dialog.loading);
 		});
 
+	window.addEventListener("pomng.conn_error", pomngUI.dialog.conn_error);
+
+}
+
+pomngUI.dialog.conn_error = function(event) {
+
+	if (event.detail.status == 0) {
+		$("#dlg_conn_error #msg").text("Connection to POM-NG failed !");
+	} else {
+		$("#dlg_conn_error #msg").html('Status : ' + event.detail.status + '<br/>Error : ' + event.detail.error);
+	}
+	$("#dlg_conn_error").dialog({
+		resizable: false,
+		modal: true,
+		width: "auto",
+		title: "Connection error !",
+		dialogClass: "no-close",
+		buttons: {
+			Reload: function() { location.reload() }
+		}
+	});
+
 }
 
 pomngUI.dialog.loading = function(event) {

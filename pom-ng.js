@@ -41,7 +41,13 @@ pomng.call = function(method, success, params, context) {
 }
 
 pomng.call_error = function(jqXHR, status, error) {
-	alert("An error occured : " + error);
+
+	if (jqXHR.status == 0) {
+		// The request was aborted
+		// Happens when the page is reloaded
+		return;}
+
+	alert("An error occurred : " + error);
 }
 
 pomng.poll = function() {
@@ -54,6 +60,15 @@ pomng.poll = function() {
 			pomng.poll_failed = 0;
 
 			var serials = response[0];
+
+			if (pomng.serials["main"] > serials["main"]) {
+				// We need to reload everything since main serial decreased
+				// It means the program was restarted 
+				// Throw a connection error event
+				var event = new CustomEvent("pomng.conn_error", { detail: { status: jqXHR.status, error: error }});
+				window.dispatchEvent(event);
+				return;
+			}
 
 			if (pomng.serials["registry"] != serials["registry"]) {
 				pomng.registry.update();
@@ -86,17 +101,9 @@ pomng.poll_error = function(jqXHR, status, error) {
 		return;
 	}
 
-	if (jqXHR.status == 0) {
-		// The request was aborted
-		// Happens when the page is reloaded
-		return;
-	}
-
 	
 	var event = new CustomEvent("pomng.conn_error", { detail: { status: jqXHR.status, error: error }});
 	window.dispatchEvent(event);
-
-	alert("Polling failed ! Status : " + jqXHR.status + " | " + error);
 }
 
 /*
@@ -336,19 +343,44 @@ pomng.monitor.eventListenerUnregister = function(name, context) {
 }
 
 pomng.monitor.poll = function() {
-	pomng.call("evtmon.poll", function(response, status, jqXHR) {
-		var rsp = response[0];
-		for (var i = 0; i < rsp.length; i++) {
-			var rspevt = rsp[i];
-			var evt_listeners = pomng.monitor.evt_listeners[rspevt['event']];
-			for (var j = 0; j < evt_listeners.length; j++)
-				evt_listeners[j].callback.call(evt_listeners[j].context, rspevt);
-		}
+	$.xmlrpc({
+		url: pomng.url,
+		methodName: "evtmon.poll",
+		success: function (response, status, jqXHR) {
+			var rsp = response[0];
+			for (var i = 0; i < rsp.length; i++) {
+				var rspevt = rsp[i];
+				var evt_listeners = pomng.monitor.evt_listeners[rspevt['event']];
+				for (var j = 0; j < evt_listeners.length; j++)
+					evt_listeners[j].callback.call(evt_listeners[j].context, rspevt);
+			}
 
-		// Restart polling if we are monitoring stuff
-		if (Object.keys(pomng.monitor.evt_listeners).length > 0)
-			pomng.monitor.poll();
+			// Restart polling if we are monitoring stuff
+			if (Object.keys(pomng.monitor.evt_listeners).length > 0)
+				pomng.monitor.poll();
+		},
 
-	}, [ pomng.monitor.sess_id ]);
+		params: [ pomng.monitor.sess_id ],
+		error: pomng.monitor.poll_error
+	});
+
+}
+
+pomng.monitor.poll_error = function(jqXHR, status, error) {
+
+	if ((jqXHR.status == 502 || jqXHR.status == 503) && pomng.poll_failed < 10) {
+		// Most probably a timeout, restart polling after some time
+		// Error handling will be dealt by the main polling connection
+		setTimeout(pomng.monitor.poll, 1000);
+		return;
+
+	} else if (jqXHR.status == 0) {
+		// The request was aborted
+		// Happens when the page is reloaded
+		return;
+	}
+
+	// TODO improve error message and handling
+	alert("Monitor polling failed !");
 
 }
