@@ -995,6 +995,7 @@ pomngUI.perf.init = function() {
 	this.graph_count = 0;
 	this.poll_interval = 1000;
 	this.poll_running = false;
+	this.max_time = 60 * 5;
 	
 }
 
@@ -1028,13 +1029,22 @@ pomngUI.perf.plot = function(id) {
 
 	var plot_data = [];
 
+	var has_data = false;
+
 	for (var i = 0; i < graph.perfs.length; i++) {
 		var perf_id = graph.perfs[i];
 		var perf = pomngUI.perf.perfs[perf_id];
+		if (perf.series.length > 1)
+			has_data = true;
 		plot_data.push({ label: perf.label, data: perf.series });
 	}
 
-	$.plot(elem, plot_data, options);
+	if (!has_data) {
+		elem.text("Fetching initial data ...");
+	} else {
+		elem.text('');
+		$.plot(elem, plot_data, options);
+	}
 }
 
 pomngUI.perf.deactivate = function() {
@@ -1113,13 +1123,6 @@ pomngUI.perf.poll = function() {
 		pomng.call("registry.getPerfs", pomngUI.perf.updatePerf, [ perf_array ]);
 	}
 
-	// TODO remove
-	if (pomngUI.perf.poll_count === undefined)
-		pomngUI.perf.poll_count = 0;
-	if (pomngUI.perf.poll_count > 100)
-		clearInterval(pomngUI.perf.interval);
-	pomngUI.perf.poll_count++
-
 }
 
 pomngUI.perf.updatePerf = function(response, status, jqXHR) {
@@ -1161,6 +1164,15 @@ pomngUI.perf.updatePerf = function(response, status, jqXHR) {
 
 		// Add the value to the values
 		pomngUI.perf.perfs[perf_id].values.push(perf_value);
+
+		// Remove old entries
+		while ((pomngUI.perf.perfs[perf_id].values.length > 0) && (pomngUI.perf.perfs[perf_id].values[0].sys_time.sec < perf.sys_time.sec - pomngUI.perf.max_time)) {
+			pomngUI.perf.perfs[perf_id].values.splice(0,1);
+		}
+
+		while ((pomngUI.perf.perfs[perf_id].series.length > 0) && (pomngUI.perf.perfs[perf_id].series[0][0] < sys_time - (pomngUI.perf.max_time * 1000))) {
+			pomngUI.perf.perfs[perf_id].series.splice(0,1);
+		}
 	}
 	
 	// Update the graphs
