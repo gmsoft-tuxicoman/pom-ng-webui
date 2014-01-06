@@ -1020,7 +1020,8 @@ pomngUI.perf.plot = function(id) {
 		},
 		yaxis: {
 			min: 0,
-		}
+			position: "right",
+		},
 
 	};
 
@@ -1064,7 +1065,7 @@ pomngUI.perf.addGraph = function(graph) {
 	this.graphs[id] = graph;
 
 
-	$("#performance #graphs").append('<div id="' + graph.elem_id + '_container" style="padding:2em"><h4>' + graph.title + '</h4><div id="' + graph.elem_id + '" style="width:' + graph.width + ';height:' + graph.height + '"></div></div>');
+	$("#performance #graphs").append('<div id="' + graph.elem_id + '_container" style="padding:1em"><h4>' + graph.title + '</h4><div id="' + graph.elem_id + '" style="width:' + graph.width + ';height:' + graph.height + '"></div></div>');
 
 	if (this.activated)
 		this.plot(id);
