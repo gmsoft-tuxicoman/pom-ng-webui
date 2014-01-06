@@ -17,9 +17,13 @@ pomngUI.init = function() {
 	pomngUI.config.init();
 	pomngUI.logs.init();
 	pomngUI.weboutput.init();
+	pomngUI.perf.init();
 
-	$("#menu").tabs();
+	var tabs = $("#menu").tabs({
+		activate: this.tabActivate,
+	});
 	
+
 	$("#menu").addClass("ui-tabs-vertical ui-helper-clearfix");
 	$("#menu").removeClass("ui-widget-content");
 
@@ -31,6 +35,20 @@ pomngUI.timeval_toString = function(tv) {
 	var date = new Date();
 	date.setTime((tv['sec'] * 1000) + (tv['usec'] / 1000));
 	return date.getFullYear()  + "/" + (date.getMonth() + 1) + "/" + date.getDate() + " " + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2) + "." + date.getMilliseconds();
+}
+
+pomngUI.tabActivate = function(event, ui) {
+	var newPanel = ui.newPanel[0].id;
+	var oldPanel = ui.oldPanel[0].id;
+
+	if (newPanel == "tab_performance") {
+		pomngUI.perf.activate();
+	}
+
+	if (oldPanel == "tab_performance") {
+		pomngUI.perf.deactivate();
+	}
+
 }
 
 /*
@@ -658,6 +676,7 @@ pomngUI.summary.evtUpdateInstance = function(event) {
 	
 	// Parameter icon
 	html += '<span class="ui-icon ui-icon-gear icon-btn" title="Parameters" onclick="pomngUI.dialog.instanceParameter(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
+
 	
 	// Remove icon
 	html += '<span class="ui-icon ui-icon-close icon-btn" title="Remove" onclick="pomngUI.dialog.instanceRemove(\'' + event.detail.cls_name + '\', \'' + event.detail.instance_name + '\')"/>';
@@ -961,4 +980,273 @@ pomngUI.weboutput.add = function(type) {
 	});
 
 }
+
+
+/*
+ * Performances
+ */
+pomngUI.perf = {};
+pomngUI.perf.init = function() {
+
+	$("#tab_performance #add_graph").button().click(function(event) {  pomngUI.perf.addDialog(); } );
+
+	this.graphs = [];
+	this.perfs = {};
+	this.graph_count = 0;
+	this.poll_interval = 1000;
+	this.poll_running = false;
+	
+}
+
+pomngUI.perf.activate = function() {
+	this.activated = true;
+
+	for (var i = 0; i < this.graphs.length; i++) {
+		this.plot(i);
+	}
+
+}
+
+pomngUI.perf.plot = function(id) {
+
+	if (!this.activated)
+		return;
+
+	var options = {
+		xaxis: {
+			mode: "time"
+		}
+
+	};
+
+	var graph = this.graphs[id];
+	var elem = $('#' + graph.elem_id);
+
+	var plot_data = [];
+
+	for (var i = 0; i < graph.perfs.length; i++) {
+		var perf_id = graph.perfs[i];
+		plot_data.push({ label: perf_id, data: pomngUI.perf.perfs[perf_id].series });
+	}
+
+	$.plot(elem, plot_data, options);
+}
+
+pomngUI.perf.deactivate = function() {
+	this.activated = false;
+}
+
+pomngUI.perf.addGraph = function(graph) {
+
+	// Variable graph is an object with properties height and width
+
+	var id = pomngUI.perf.graphs.length;
+	graph.elem_id = 'graph-' + this.graph_count;
+	this.graph_count++;
+
+	graph.perfs = [];
+
+	this.graphs[id] = graph;
+
+
+	$("#performance #graphs").append('<div id="' + graph.elem_id + '_container"><div id="' + graph.elem_id + '" style="width:' + graph.width + ';height:' + graph.height + '"></div></div>');
+
+	if (this.activated)
+		this.plot(id);
+
+	return id;
+}
+
+pomngUI.perf.addPerfToGraph = function(graph_id, perf) {
+	
+	var perf_id;
+	if (perf.instance === undefined) {
+		perf_id = 'cls_' + perf.class + '_' + perf.name;
+	} else {
+		perf_id = 'inst_' + perf.class + '_' + perf.instance + '_' + perf.name;
+	}
+
+	perf.values = [];
+	perf.series = [];
+
+	if (this.perfs[perf_id] === undefined) {
+		this.perfs[perf_id] = perf;
+	}
+
+	this.graphs[graph_id].perfs.push(perf_id);
+
+	if (this.interval === undefined)
+		this.interval = setInterval(this.poll, this.poll_interval);
+}
+
+pomngUI.perf.poll = function() {
+
+	var perf_array = [];
+
+	for (var perf_id in pomngUI.perf.perfs) {
+		var perf = pomngUI.perf.perfs[perf_id];
+		var entry = { class: perf.class, perf: perf.name };
+		if (perf.instance !== undefined)
+			entry.instance = perf.instance;
+
+		perf_array.push(entry);
+	}
+
+	if (!pomngUI.perf.poll_running) {
+		pomngUI.perf.poll_running = true;
+		pomng.call("registry.getPerfs", pomngUI.perf.updatePerf, [ perf_array ]);
+	}
+
+	// TODO remove
+	if (pomngUI.perf.poll_count === undefined)
+		pomngUI.perf.poll_count = 0;
+	if (pomngUI.perf.poll_count > 100)
+		clearInterval(pomngUI.perf.interval);
+	pomngUI.perf.poll_count++
+
+}
+
+pomngUI.perf.updatePerf = function(response, status, jqXHR) {
+
+	var perfs = response[0];
+
+	// Add the value for each perf
+	for (var i = 0; i < perfs.length; i++) {
+
+		var perf = perfs[i]
+		var perf_id;
+		var perf_type;
+		if (perf.instance === undefined) {
+			perf_id = 'cls_' + perf.class + '_' + perf.perf;
+			perf_type = pomng.registry.classes[perf.class].performances[perf.perf].type;
+		} else {
+			perf_id = 'inst_' + perf.class + '_' + perf.instance + '_' + perf.perf;
+			perf_type = pomng.registry.classes[perf.class].instances[perf.instance].performances[perf.perf].type;
+		}
+		var perf_value = { sys_time: perf.sys_time, value: perf.value };
+
+		if (perf.pkt_time !== undefined)
+			perf_value.pkt_time = perf.pkt_time;
+
+		var sys_time = (perf.sys_time.sec * 1000) + Math.round(perf.sys_time.usec / 1000);
+
+		// Add the value to the series
+		if (pomngUI.perf.perfs[perf_id].values.length > 1) {
+			
+			if (perf_type == "counter") {
+				var last_id = pomngUI.perf.perfs[perf_id].values.length - 2;
+				var delta = perf.value - pomngUI.perf.perfs[perf_id].values[last_id].value;
+				pomngUI.perf.perfs[perf_id].series.push([sys_time, delta]);
+			} else {
+				pomngUI.perf.perfs[perf_id].series.push([sys_time, perf.value]);
+			}
+		}
+		
+
+		// Add the value to the values
+		pomngUI.perf.perfs[perf_id].values.push(perf_value);
+	}
+	
+	// Update the graphs
+	for (var i = 0; i < pomngUI.perf.graphs.length; i++) {
+		pomngUI.perf.plot(i);
+	}
+
+	pomngUI.perf.poll_running = false;
+}
+
+pomngUI.perf.addDialog = function() {
+
+	var options = '';
+	for (var i = 0; i < pomngUI.perf.templates.length; i++) {
+		options += '<option value="' + i + '">' + pomngUI.perf.templates[i].title + '</option>';
+	}
+
+	$("#dlg_perf_template_add #template").html(options).change(function() { pomngUI.perf.addDialogUpdateParam($("#dlg_perf_template_add #template").val()); });
+
+	pomngUI.perf.addDialogUpdateParam(0);
+
+
+	$("#dlg_perf_template_add").dialog({
+		resizable: false,
+		modal: true,
+		width: "auto",
+		title: "Add a performance graph",
+		buttons: {
+			Ok: function () {
+				var graph_id = pomngUI.perf.addGraph({width: "600px", height: "200px" });
+				var template_id = $("#dlg_perf_template_add #template").val();
+				var template = pomngUI.perf.templates[template_id];
+				var params = [];
+				for (var i = 0; i < template.params.length; i++) {
+					params.push($("#dlg_perf_template_add #param_" + i).val());
+				}
+
+				var perfs = template.perfs(params);
+				for (var i = 0; i < perfs.length; i++) {
+					pomngUI.perf.addPerfToGraph(graph_id, perfs[i]);
+				}
+				$(this).dialog("close");
+			}
+		}
+	})
+
+}
+
+pomngUI.perf.addDialogUpdateParam = function(template_id) {
+
+	if (pomngUI.perf.templates[template_id].params.length == 0) {
+		$("#dlg_perf_template_add #params").hide();
+		return;
+	}
+
+	var params = '<table>';
+	for (var i = 0; i < pomngUI.perf.templates[template_id].params.length; i++) {
+		var param = pomngUI.perf.templates[template_id].params[i];
+		params += '<tr><td>' + param.name + ' : </td><td>';
+		
+		var values = param.values();
+		if (values.length == 0) {
+			params += '<input type="hidden" id="param_' + i + '" value="' + values[0] + '"/>' + values[0];
+		} else {
+			params += '<select id="param_' + i + '">';
+			for (var j = 0; j < values.length; j++) {
+				params += '<option value="' + values[j] + '">' + values[j] + '</option>';
+			}
+			params += '</select>';
+		}
+
+		params += '</td></tr>';
+	}
+
+	params += '</table>';
+
+	$("#dlg_perf_template_add #params").html(params).show();
+}
+
+pomngUI.perf.templates = [
+
+	{
+		title: "Bytes per second of an input",
+		params: [ {
+				name: "Input",
+				values: function() { return Object.keys(pomng.registry.classes.input.instances) }
+
+			} ],
+		perfs: function(params) {
+			return [ { class: 'input', instance: params[0], name: 'bytes_in' } ];
+		}
+	},
+	{
+		title: "Packets per second of an input",
+		params: [ {
+				name: "Input",
+				values: function() { return Object.keys(pomng.registry.classes.input.instances) }
+
+			} ],
+		perfs: function(params) {
+			return [ { class: 'input', instance: params[0], name: 'pkts_in' } ];
+		}
+	}
+];
 
