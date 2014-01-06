@@ -1014,7 +1014,11 @@ pomngUI.perf.plot = function(id) {
 
 	var options = {
 		xaxis: {
-			mode: "time"
+			mode: "time",
+			timezone: "browser",
+		},
+		yaxis: {
+			min: 0,
 		}
 
 	};
@@ -1026,7 +1030,8 @@ pomngUI.perf.plot = function(id) {
 
 	for (var i = 0; i < graph.perfs.length; i++) {
 		var perf_id = graph.perfs[i];
-		plot_data.push({ label: perf_id, data: pomngUI.perf.perfs[perf_id].series });
+		var perf = pomngUI.perf.perfs[perf_id];
+		plot_data.push({ label: perf.label, data: perf.series });
 	}
 
 	$.plot(elem, plot_data, options);
@@ -1038,7 +1043,7 @@ pomngUI.perf.deactivate = function() {
 
 pomngUI.perf.addGraph = function(graph) {
 
-	// Variable graph is an object with properties height and width
+	// Variable graph is an object with properties height, width, title
 
 	var id = pomngUI.perf.graphs.length;
 	graph.elem_id = 'graph-' + this.graph_count;
@@ -1049,7 +1054,7 @@ pomngUI.perf.addGraph = function(graph) {
 	this.graphs[id] = graph;
 
 
-	$("#performance #graphs").append('<div id="' + graph.elem_id + '_container"><div id="' + graph.elem_id + '" style="width:' + graph.width + ';height:' + graph.height + '"></div></div>');
+	$("#performance #graphs").append('<div id="' + graph.elem_id + '_container" style="padding:2em"><h4>' + graph.title + '</h4><div id="' + graph.elem_id + '" style="width:' + graph.width + ';height:' + graph.height + '"></div></div>');
 
 	if (this.activated)
 		this.plot(id);
@@ -1060,10 +1065,21 @@ pomngUI.perf.addGraph = function(graph) {
 pomngUI.perf.addPerfToGraph = function(graph_id, perf) {
 	
 	var perf_id;
+	var perf_reg;
 	if (perf.instance === undefined) {
 		perf_id = 'cls_' + perf.class + '_' + perf.name;
+		perf_reg = pomng.registry.classes[perf.class].performances[perf.name];
+		perf.label = 'Class ' + perf.class + ' ' + perf.name;
 	} else {
 		perf_id = 'inst_' + perf.class + '_' + perf.instance + '_' + perf.name;
+		perf_reg = pomng.registry.classes[perf.class].instances[perf.instance].performances[perf.name];
+		perf.label = perf.class.charAt(0).toUpperCase() + perf.class.slice(1) + ' ' + perf.instance + ' ' + perf.name;
+	}
+
+	if (perf_reg.type == "counter") {
+		perf.label += ' (' + perf_reg.unit + '/sec)';
+	} else {
+		perf.label += ' (' + perf_reg.unit + ')';
 	}
 
 	perf.values = [];
@@ -1159,13 +1175,14 @@ pomngUI.perf.addDialog = function() {
 
 	var options = '';
 	for (var i = 0; i < pomngUI.perf.templates.length; i++) {
-		options += '<option value="' + i + '">' + pomngUI.perf.templates[i].title + '</option>';
+		options += '<option value="' + i + '">' + pomngUI.perf.templates[i].name + '</option>';
 	}
 
 	$("#dlg_perf_template_add #template").html(options).change(function() { pomngUI.perf.addDialogUpdateParam($("#dlg_perf_template_add #template").val()); });
 
 	pomngUI.perf.addDialogUpdateParam(0);
 
+	$("#dlg_perf_template_add #title").val("Graph " + this.graph_count);
 
 	$("#dlg_perf_template_add").dialog({
 		resizable: false,
@@ -1174,7 +1191,8 @@ pomngUI.perf.addDialog = function() {
 		title: "Add a performance graph",
 		buttons: {
 			Ok: function () {
-				var graph_id = pomngUI.perf.addGraph({width: "600px", height: "200px" });
+				var title = $("#dlg_perf_template_add #title").val();
+				var graph_id = pomngUI.perf.addGraph({width: "100%", height: "200px", title: title  });
 				var template_id = $("#dlg_perf_template_add #template").val();
 				var template = pomngUI.perf.templates[template_id];
 				var params = [];
@@ -1206,7 +1224,7 @@ pomngUI.perf.addDialogUpdateParam = function(template_id) {
 		params += '<tr><td>' + param.name + ' : </td><td>';
 		
 		var values = param.values();
-		if (values.length == 0) {
+		if (values.length == 1) {
 			params += '<input type="hidden" id="param_' + i + '" value="' + values[0] + '"/>' + values[0];
 		} else {
 			params += '<select id="param_' + i + '">';
@@ -1227,7 +1245,7 @@ pomngUI.perf.addDialogUpdateParam = function(template_id) {
 pomngUI.perf.templates = [
 
 	{
-		title: "Bytes per second of an input",
+		name: "Bytes per second of an input",
 		params: [ {
 				name: "Input",
 				values: function() { return Object.keys(pomng.registry.classes.input.instances) }
@@ -1238,7 +1256,7 @@ pomngUI.perf.templates = [
 		}
 	},
 	{
-		title: "Packets per second of an input",
+		name: "Packets per second of an input",
 		params: [ {
 				name: "Input",
 				values: function() { return Object.keys(pomng.registry.classes.input.instances) }
