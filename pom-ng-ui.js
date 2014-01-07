@@ -792,7 +792,7 @@ pomngUI.logs.append = function(id) {
 
 	$("#tbl_logs").append(html);
 
-
+	$("#logs_content").scrollTop($("#logs_content")[0].scrollHeight);
 }
 
 pomngUI.logs.update = function() {
@@ -848,7 +848,7 @@ pomngUI.logs.resize = function() {
 	var lh = $("#logs").outerHeight();
 	$("#root").height(wh - lh);
 
-
+	$("#logs_content").scrollTop($("#logs_content")[0].scrollHeight);
 }
 
 pomngUI.logs.paramDialog = function() {
