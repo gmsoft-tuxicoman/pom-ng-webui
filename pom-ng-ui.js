@@ -1205,15 +1205,28 @@ pomngUI.perf.addDialog = function() {
 		buttons: {
 			Ok: function () {
 				var title = $("#dlg_perf_template_add #title").val();
-				var graph_id = pomngUI.perf.addGraph({width: "100%", height: "200px", title: title  });
 				var template_id = $("#dlg_perf_template_add #template").val();
 				var template = pomngUI.perf.templates[template_id];
 				var params = [];
-				for (var i = 0; i < template.params.length; i++) {
-					params.push($("#dlg_perf_template_add #param_" + i).val());
+				if (template.params !== undefined) {
+					for (var i = 0; i < template.params.length; i++) {
+						var param = template.params[i];
+						var value;
+						if (param.type == "multiple") {
+							value = [];
+							$("#dlg_perf_template_add #param_" + i + " option:selected").map(function() { value.push($(this).val()); });
+						} else {
+							value = $("#dlg_perf_template_add #param_" + i).val();
+						}
+						params.push(value);
+					}
 				}
 
 				var perfs = template.perfs(params);
+				if (perfs.length == 0)
+					return;
+				
+				var graph_id = pomngUI.perf.addGraph({width: "100%", height: "200px", title: title  });
 				for (var i = 0; i < perfs.length; i++) {
 					pomngUI.perf.addPerfToGraph(graph_id, perfs[i]);
 				}
@@ -1226,7 +1239,7 @@ pomngUI.perf.addDialog = function() {
 
 pomngUI.perf.addDialogUpdateParam = function(template_id) {
 
-	if (pomngUI.perf.templates[template_id].params.length == 0) {
+	if (pomngUI.perf.templates[template_id].params === undefined) {
 		$("#dlg_perf_template_add #params").hide();
 		return;
 	}
@@ -1240,7 +1253,10 @@ pomngUI.perf.addDialogUpdateParam = function(template_id) {
 		if (values.length == 1) {
 			params += '<input type="hidden" id="param_' + i + '" value="' + values[0] + '"/>' + values[0];
 		} else {
-			params += '<select id="param_' + i + '">';
+			params += '<select id="param_' + i + '"';
+			if (param.type == "multiple")
+				params += " multiple";
+			params += '>';
 			for (var j = 0; j < values.length; j++) {
 				params += '<option value="' + values[j] + '">' + values[j] + '</option>';
 			}
@@ -1256,27 +1272,57 @@ pomngUI.perf.addDialogUpdateParam = function(template_id) {
 }
 
 pomngUI.perf.templates = [
-
 	{
-		name: "Bytes per second of an input",
+		name: "Input bytes per second",
 		params: [ {
 				name: "Input",
-				values: function() { return Object.keys(pomng.registry.classes.input.instances) }
+				type: "multiple",
+				values: function() { return Object.keys(pomng.registry.classes.input.instances).sort() }
 
 			} ],
 		perfs: function(params) {
-			return [ { class: 'input', instance: params[0], name: 'bytes_in' } ];
+			var perfs = [];
+			var param = params[0];
+			if (param.length == 0)
+				alert("You must select at least one input");
+			for (var i = 0; i < param.length; i++)
+				perfs.push({ class: 'input', instance: param[i], name: 'bytes_in' });
+			return perfs;
 		}
 	},
 	{
-		name: "Packets per second of an input",
+		name: "Input packets per second",
 		params: [ {
 				name: "Input",
-				values: function() { return Object.keys(pomng.registry.classes.input.instances) }
+				type: "multiple",
+				values: function() { return Object.keys(pomng.registry.classes.input.instances).sort() }
 
 			} ],
 		perfs: function(params) {
-			return [ { class: 'input', instance: params[0], name: 'pkts_in' } ];
+			var perfs = [];
+			var param = params[0];
+			if (param.length == 0)
+				alert("You must select at least one input");
+			for (var i = 0; i < param.length; i++)
+				perfs.push({ class: 'input', instance: param[i], name: 'pkts_in' });
+			return perfs;
+		}
+	},
+	{
+		name: "Event processed",
+		params: [ {
+				name: "Event",
+				type: "multiple",
+				values: function() { return Object.keys(pomng.registry.classes.event.instances).sort() }
+			} ],
+		perfs: function(params) {
+			var perfs = [];
+			var param = params[0];
+			if (param.length == 0)
+				alert("You must select at least one event");
+			for (var i = 0; i < param.length; i++)
+				perfs.push({ class: 'event', instance: param[i], name: 'processed' });
+			return perfs;
 		}
 	}
 ];
