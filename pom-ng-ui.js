@@ -1022,6 +1022,9 @@ pomngUI.perf.plot = function(id) {
 			min: 0,
 			position: "right",
 		},
+		legend: {
+			position: "nw",
+		}
 
 	};
 
@@ -1324,6 +1327,42 @@ pomngUI.perf.templates = [
 				perfs.push({ class: 'event', instance: param[i], name: 'processed' });
 			return perfs;
 		}
-	}
+	},
+	{
+		name: "Protocol bytes per second",
+		params: [ {
+				name: "Protocol",
+				type: "multiple",
+				values: function() { return Object.keys(pomng.registry.classes.proto.instances).sort() }
+
+			} ],
+		perfs: function(params) {
+			var perfs = [];
+			var param = params[0];
+			if (param.length == 0)
+				alert("You must select at least one prototocol");
+			for (var i = 0; i < param.length; i++)
+				perfs.push({ class: 'proto', instance: param[i], name: 'bytes' });
+			return perfs;
+		}
+	},
+	{
+		name: "Protocol packets per second",
+		params: [ {
+				name: "Protocol",
+				type: "multiple",
+				values: function() { return Object.keys(pomng.registry.classes.proto.instances).sort() }
+
+			} ],
+		perfs: function(params) {
+			var perfs = [];
+			var param = params[0];
+			if (param.length == 0)
+				alert("You must select at least one protocol");
+			for (var i = 0; i < param.length; i++)
+				perfs.push({ class: 'proto', instance: param[i], name: 'pkts' });
+			return perfs;
+		}
+	},
 ];
 
