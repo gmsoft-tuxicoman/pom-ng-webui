@@ -1488,7 +1488,7 @@ pomngUI.perf.removeGraph = function(graph_id) {
 pomngUI.perf.graphConfig = function(graph_id) {
 
 	var graph = pomngUI.perf.graphs[graph_id];
-	$("dlg_perf_cfg_graph #title").val(graph.title);
+	$("#dlg_perf_cfg_graph #title").val(graph.title);
 	
 	var perf_html = '';
 	for (var i = 0; i < graph.perfs.length; i++) {
