@@ -1080,7 +1080,7 @@ pomngUI.perf.addGraph = function(graph) {
 	this.graphs[id] = graph;
 
 
-	$("#performance #graphs").append('<div id="' + graph.elem_id + '_container" style="padding-top:1em"><h4>' + graph.title + '</h4><span style="float:right"><span class="ui-icon ui-icon-gear icon-btn"></span><span class="ui-icon ui-icon-close icon-btn" onclick="pomngUI.perf.removeGraphDialog(' + id + ')"></span></span><div id="' + graph.elem_id + '" style="width:' + graph.width + ';height:' + graph.height + '"></div></div>');
+	$("#performance #graphs").append('<div id="' + graph.elem_id + '_container" style="padding-top:1em"><h4>' + graph.title + '</h4><span style="float:right"><span class="ui-icon ui-icon-gear icon-btn" onclick="pomngUI.perf.graphConfig(' + id + ')"></span><span class="ui-icon ui-icon-close icon-btn" onclick="pomngUI.perf.removeGraphDialog(' + id + ')"></span></span><div id="' + graph.elem_id + '" style="width:' + graph.width + ';height:' + graph.height + '"></div></div>');
 
 	if (this.activated)
 		this.plot(id);
@@ -1412,7 +1412,7 @@ pomngUI.perf.addDialog = function(perf_str) {
 				if (graph_id == -1) {
 					var name = $("#dlg_perf_add #graph_name input").val();
 					if (name == "") {
-						alert("You must specify a graph name");
+						alert("You must specify a graph title");
 						return;
 					}
 					graph_id = pomngUI.perf.addGraph({width: "100%", height: "200px", title: name });
@@ -1483,4 +1483,50 @@ pomngUI.perf.removeGraph = function(graph_id) {
 
 	pomngUI.perf.graphs.splice(graph_id, 1);
 	$("#" + graph.elem_id + "_container").remove();
+}
+
+pomngUI.perf.graphConfig = function(graph_id) {
+
+	var graph = pomngUI.perf.graphs[graph_id];
+	$("dlg_perf_cfg_graph #title").val(graph.title);
+	
+	var perf_html = '';
+	for (var i = 0; i < graph.perfs.length; i++) {
+		var perf = pomngUI.perf.perfs[graph.perfs[i]];
+		perf_html += '<tr><td>' + perf.label + '</td><td><input type="checkbox" id="' + graph.perfs[i] + '"></input></td></tr>';
+	}
+	$("#dlg_perf_cfg_graph #perfs").html(perf_html);
+
+	$("#dlg_perf_cfg_graph").dialog({
+		resizable: false,
+		modal: true,
+		width: "auto",
+		title: "Add a performance to a graph",
+		buttons: {
+			Ok: function () {
+				var title = $("#dlg_perf_cfg_graph #title").val();
+				if (title == "") {
+					alert("You must specify a graph title");
+					return;
+				}
+
+				pomngUI.perf.graphs[graph_id].title = title;
+				var graph = pomngUI.perf.graphs[graph_id];
+				$("#graphs #" + graph.elem_id + "_container h4").text(title);
+				for (var i = 0; i < graph.perfs.length; i++) {
+					if ($("#dlg_perf_cfg_graph #" + graph.perfs[i]).prop('checked')) {
+						pomngUI.perf.removePerfFromGraph(graph_id, graph.perfs[i]);
+						i--;
+					}
+				}
+				$(this).dialog("close");
+			},
+			Cancel: function() {
+				$(this).dialog("close");
+			}
+		}
+	});
+
+
+
 }
