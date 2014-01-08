@@ -290,7 +290,7 @@ pomng.monitor.eventListenerRegister = function(name, callback, context) {
 	if (pomng.monitor.sess_id == -1) {
 		// Start a monitor session
 		pomng.monitor.sess_id = -2;
-		pomng.call("evtmon.start", 
+		pomng.call("monitor.start", 
 			function(response, status, jqXHR) {
 				pomng.monitor.sess_id = response[0];
 				// Register all the events
@@ -298,7 +298,7 @@ pomng.monitor.eventListenerRegister = function(name, callback, context) {
 				for (var i = 0; i < event_names.length; i++) {
 					var evt_listeners = pomng.monitor.evt_listeners[event_names[i]];
 					for (var j = 0; j < evt_listeners.length; j++) {
-						pomng.call("evtmon.add", null, [ pomng.monitor.sess_id, evt_listeners[j].name]);
+						pomng.call("monitor.eventAdd", null, [ pomng.monitor.sess_id, evt_listeners[j].name]);
 					}
 				}
 				pomng.monitor.poll();
@@ -306,7 +306,7 @@ pomng.monitor.eventListenerRegister = function(name, callback, context) {
 			}, [ pomng.monitor.poll_timeout ]);
 
 	} else if (pomng.monitor.sess_id >= 0) {
-		pomng.call("evtmon.add", null, [ pomng.monitor.sess_id, name]);
+		pomng.call("monitor.eventAdd", null, [ pomng.monitor.sess_id, name]);
 	}
 
 
@@ -332,12 +332,12 @@ pomng.monitor.eventListenerUnregister = function(name, context) {
 	if (listeners.length == 0) {
 		// Remove the event from the monitoring list
 		delete pomng.monitor.evt_listeners[name];
-		pomng.call("evtmon.remove", null, [ pomng.monitor.sess_id, name]);
+		pomng.call("monitor.eventRemove", null, [ pomng.monitor.sess_id, name]);
 	}
 
 	if (Object.keys(pomng.monitor.evt_listeners).length == 0) {
 		// Nothing is being monitored. Stop polling
-		pomng.call("evtmon.stop", null, [ pomng.monitor.sess_id ]);
+		pomng.call("monitor.stop", null, [ pomng.monitor.sess_id ]);
 		pomng.monitor.sess_id = -1;		
 	}
 
@@ -347,7 +347,7 @@ pomng.monitor.eventListenerUnregister = function(name, context) {
 pomng.monitor.poll = function() {
 	$.xmlrpc({
 		url: pomng.url,
-		methodName: "evtmon.poll",
+		methodName: "monitor.poll",
 		success: function (response, status, jqXHR) {
 			var rsp = response[0];
 			for (var i = 0; i < rsp.length; i++) {
