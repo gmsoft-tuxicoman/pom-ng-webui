@@ -266,7 +266,6 @@ pomng.logs.update = function() {
 				if (pomng.logs.entries[log.id] !== undefined)
 					continue;
 				pomng.logs.entries[log.id] = log;
-				console.log("Dispatching event for " + log.id);
 				var event = new CustomEvent("pomng.logs.new", { detail: { id: log.id } });
 				window.dispatchEvent(event);
 			}

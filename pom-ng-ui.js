@@ -212,7 +212,13 @@ pomngUI.registry.classDetail = function(cls_name) {
 
 		for (var i = 0; i < perfs_name.length; i++) {
 			var perf = cls.performances[perfs_name[i]];
-			html += '<tr><td>' + perf.name + '</td><td>' + perf.type + '</td><td id="td_perf_cls_' + cls.name + '_' + perf.name + '">Fetching ...</td><td>' + perf.unit + '</td><td>' + perf.description + '</td></tr>';
+			html += '<tr><td>';
+			if (perf.type != "timeticks") {
+				html += '<a href="javascript:pomngUI.perf.addDialog(\'' + cls_name + '.' + perf.name + '\')">' + perf.name + '</a>';
+			} else {
+				html += perf.name;
+			}
+			html += '</td><td>' + perf.type + '</td><td id="td_perf_cls_' + cls.name + '_' + perf.name + '">Fetching ...</td><td>' + perf.unit + '</td><td>' + perf.description + '</td></tr>';
 			perfs_to_fetch.push({class: cls.name, perf: perf.name});
 		}
 		html += '</tbody></table>';
@@ -326,7 +332,13 @@ pomngUI.registry.instanceDetail = function(cls_name, inst_name) {
 
 		for (var i = 0; i < perfs_name.length; i++) {
 			var perf = inst.performances[perfs_name[i]];
-			html += '<tr><td>' + perf.name + '</td><td>' + perf.type + '</td><td id="td_perf_inst_' + cls_name + '_' + inst.name + '_' + perf.name + '">Fetching ...</td><td>' + perf.unit + '</td><td>' + perf.description + '</td></tr>';
+			html += '<tr><td>';
+			if (perf.type != "timeticks") {
+				html += '<a href="javascript:pomngUI.perf.addDialog(\'' + cls_name + '.' + inst.name + '.' + perf.name + '\')">' + perf.name + '</a>';
+			} else {
+				html += perf.name;
+			}
+			html += '</td><td>' + perf.type + '</td><td id="td_perf_inst_' + cls_name + '_' + inst.name + '_' + perf.name + '">Fetching ...</td><td>' + perf.unit + '</td><td>' + perf.description + '</td></tr>';
 			perfs_to_fetch.push({class: cls_name, instance: inst_name, perf: perf.name});
 		}
 		html += '</tbody></table>';
@@ -988,7 +1000,7 @@ pomngUI.weboutput.add = function(type) {
 pomngUI.perf = {};
 pomngUI.perf.init = function() {
 
-	$("#tab_performance #add_graph").button().click(function(event) {  pomngUI.perf.addDialog(); } );
+	$("#tab_performance #add_graph").button().click(function(event) {  pomngUI.perf.addTemplateDialog(); } );
 
 	this.graphs = [];
 	this.perfs = {};
@@ -1187,16 +1199,16 @@ pomngUI.perf.updatePerf = function(response, status, jqXHR) {
 	pomngUI.perf.poll_running = false;
 }
 
-pomngUI.perf.addDialog = function() {
+pomngUI.perf.addTemplateDialog = function() {
 
 	var options = '';
 	for (var i = 0; i < pomngUI.perf.templates.length; i++) {
 		options += '<option value="' + i + '">' + pomngUI.perf.templates[i].name + '</option>';
 	}
 
-	$("#dlg_perf_template_add #template").html(options).change(function() { pomngUI.perf.addDialogUpdateParam($("#dlg_perf_template_add #template").val()); });
+	$("#dlg_perf_template_add #template").html(options).change(function() { pomngUI.perf.addTemplateDialogUpdateParam($("#dlg_perf_template_add #template").val()); });
 
-	pomngUI.perf.addDialogUpdateParam(0);
+	pomngUI.perf.addTemplateDialogUpdateParam(0);
 
 	$("#dlg_perf_template_add #title").val("Graph " + this.graph_count);
 
@@ -1234,13 +1246,16 @@ pomngUI.perf.addDialog = function() {
 					pomngUI.perf.addPerfToGraph(graph_id, perfs[i]);
 				}
 				$(this).dialog("close");
+			},
+			Cancel: function() {
+				$(this).dialog("close");
 			}
 		}
 	})
 
 }
 
-pomngUI.perf.addDialogUpdateParam = function(template_id) {
+pomngUI.perf.addTemplateDialogUpdateParam = function(template_id) {
 
 	if (pomngUI.perf.templates[template_id].params === undefined) {
 		$("#dlg_perf_template_add #params").hide();
@@ -1365,4 +1380,61 @@ pomngUI.perf.templates = [
 		}
 	},
 ];
+
+
+pomngUI.perf.addDialog = function(perf_str) {
+
+	var options = '<option value="-1">&lt;New graph&gt;</option>';
+	for (var i = 0; i < pomngUI.perf.graphs.length; i++) {
+		options += '<option value="' + i + '">' + pomngUI.perf.graphs[i].title + '</option>';
+	}
+
+	$("#dlg_perf_add #graph").html(options);
+	$("#dlg_perf_add #graph_name input").val("");
+	$("#dlg_perf_add #graph_name").show();
+
+	$("#dlg_perf_add #graph").change(function() {
+		if ($("#dlg_perf_add #graph").val() == "-1") {
+			$("#dlg_perf_add #graph_name").show();
+		} else {
+			$("#dlg_perf_add #graph_name").hide();
+		}
+	});
+
+	$("#dlg_perf_add").dialog({
+		resizable: false,
+		modal: true,
+		width: "auto",
+		title: "Add a performance to a graph",
+		buttons: {
+			Ok: function () {
+				var graph_id = parseInt($("#dlg_perf_add #graph").val());
+				if (graph_id == -1) {
+					var name = $("#dlg_perf_add #graph_name input").val();
+					if (name == "") {
+						alert("You must specify a graph name");
+						return;
+					}
+					graph_id = pomngUI.perf.addGraph({width: "100%", height: "200px", title: name });
+				}
+
+				var perf_val = perf_str.split(".");
+				var perf = {class: perf_val[0] };
+				if (perf_val.length == 2) {
+					perf.name = perf_val[1];
+				} else {
+					perf.instance = perf_val[1];
+					perf.name = perf_val[2];
+				}
+				pomngUI.perf.addPerfToGraph(graph_id, perf);
+
+				$(this).dialog("close");
+			},
+			Cancel: function() {
+				$(this).dialog("close");
+			}
+		}
+	});
+
+}
 
