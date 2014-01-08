@@ -21,6 +21,11 @@ h3.details {
 	display: inline-block;
 }
 
+h4 {
+	display: inline-block;
+	margin: 0;
+}
+
 #toolbar {
 	padding: 4px;
 	display:inline-block;
@@ -156,3 +161,8 @@ h3.details {
 }
 
 #weboutput li .ui-icon-close { float: left; margin: 0.4em 0.2em 0 0; cursor: pointer; }
+
+
+.graph-container {
+	padding-top: 1em;
+}

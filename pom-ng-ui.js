@@ -1080,7 +1080,7 @@ pomngUI.perf.addGraph = function(graph) {
 	this.graphs[id] = graph;
 
 
-	$("#performance #graphs").append('<div id="' + graph.elem_id + '_container" style="padding:1em"><h4>' + graph.title + '</h4><div id="' + graph.elem_id + '" style="width:' + graph.width + ';height:' + graph.height + '"></div></div>');
+	$("#performance #graphs").append('<div id="' + graph.elem_id + '_container" style="padding-top:1em"><h4>' + graph.title + '</h4><span style="float:right"><span class="ui-icon ui-icon-gear icon-btn"></span><span class="ui-icon ui-icon-close icon-btn" onclick="pomngUI.perf.removeGraphDialog(' + id + ')"></span></span><div id="' + graph.elem_id + '" style="width:' + graph.width + ';height:' + graph.height + '"></div></div>');
 
 	if (this.activated)
 		this.plot(id);
@@ -1438,3 +1438,49 @@ pomngUI.perf.addDialog = function(perf_str) {
 
 }
 
+pomngUI.perf.removeGraphDialog = function(graph_id) {
+
+	var graph = pomngUI.perf.graphs[graph_id];
+
+	pomngUI.dialog.confirm("Remove graph ?",
+		"Are you sure you want to remove the graph '" + graph.title + "' ?",
+		graph_id, function(graph_id) {
+			pomngUI.perf.removeGraph(graph_id);
+		});
+}
+
+pomngUI.perf.removePerfFromGraph = function(graph_id, perf) {
+	
+	var index = pomngUI.perf.graphs[graph_id].perfs.indexOf(perf);
+	pomngUI.perf.graphs[graph_id].perfs.splice(index, 1);
+
+	// Check if other graphs are using this perf
+	for (var i = 0; i < pomngUI.perf.graphs.length; i++) {
+		var graph = pomngUI.perf.graphs[i];
+		for (j = 0; j < graph.perfs.length; j++) {
+			if (graph.perfs[j] == perf)
+				return;
+		}
+	}
+
+	// Stop polling this perf
+	delete pomngUI.perf.perfs[perf];
+
+	if (Object.keys(pomngUI.perf.perfs).length == 0) {
+		// No more perf to poll !
+		clearInterval(pomngUI.perf.interval);
+		delete pomngUI.perf.interval;
+	}
+}
+
+pomngUI.perf.removeGraph = function(graph_id) {
+
+	var graph = pomngUI.perf.graphs[graph_id];
+
+	for (var i = 0; i < graph.perfs.length; i++) {
+		pomngUI.perf.removePerfFromGraph(graph_id, graph.perfs[i]);
+	}
+
+	pomngUI.perf.graphs.splice(graph_id, 1);
+	$("#" + graph.elem_id + "_container").remove();
+}
