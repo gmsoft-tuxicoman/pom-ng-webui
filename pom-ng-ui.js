@@ -1202,13 +1202,18 @@ pomngUI.perf.updatePerf = function(response, status, jqXHR) {
 pomngUI.perf.addTemplateDialog = function() {
 
 	var options = '';
+	var first;
 	for (var i = 0; i < pomngUI.perf.templates.length; i++) {
+		if (pomngUI.perf.templates[i].valid !== undefined && !pomngUI.perf.templates[i].valid())
+			continue;
 		options += '<option value="' + i + '">' + pomngUI.perf.templates[i].name + '</option>';
+		if (first === undefined)
+			first = i;
 	}
 
 	$("#dlg_perf_template_add #template").html(options).change(function() { pomngUI.perf.addTemplateDialogUpdateParam($("#dlg_perf_template_add #template").val()); });
 
-	pomngUI.perf.addTemplateDialogUpdateParam(0);
+	pomngUI.perf.addTemplateDialogUpdateParam(first);
 
 	$("#dlg_perf_template_add #title").val("Graph " + this.graph_count);
 
@@ -1227,11 +1232,12 @@ pomngUI.perf.addTemplateDialog = function() {
 					for (var i = 0; i < template.params.length; i++) {
 						var param = template.params[i];
 						var value;
-						if (param.type == "multiple") {
+						var elem = $("#dlg_perf_template_add #param_" + i + " option:selected");
+						if (elem.length != 0) {
 							value = [];
-							$("#dlg_perf_template_add #param_" + i + " option:selected").map(function() { value.push($(this).val()); });
+							elem.map(function() { value.push($(this).val()); });
 						} else {
-							value = $("#dlg_perf_template_add #param_" + i).val();
+							value = [ $("#dlg_perf_template_add #param_" + i).val() ];
 						}
 						params.push(value);
 					}
@@ -1298,7 +1304,8 @@ pomngUI.perf.templates = [
 				values: function() { return Object.keys(pomng.registry.classes.input.instances).sort() }
 
 			} ],
-		perfs: function(params) {
+		valid: function () {Object.keys(pomng.registry.classes.input.instances).length > 0},
+		perfs: function (params) {
 			var perfs = [];
 			var param = params[0];
 			if (param.length == 0)
@@ -1316,7 +1323,8 @@ pomngUI.perf.templates = [
 				values: function() { return Object.keys(pomng.registry.classes.input.instances).sort() }
 
 			} ],
-		perfs: function(params) {
+		valid: function () {Object.keys(pomng.registry.classes.input.instances).length > 0},
+		perfs: function (params) {
 			var perfs = [];
 			var param = params[0];
 			if (param.length == 0)
@@ -1333,7 +1341,7 @@ pomngUI.perf.templates = [
 				type: "multiple",
 				values: function() { return Object.keys(pomng.registry.classes.event.instances).sort() }
 			} ],
-		perfs: function(params) {
+		perfs: function (params) {
 			var perfs = [];
 			var param = params[0];
 			if (param.length == 0)
