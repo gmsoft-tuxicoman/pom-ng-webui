@@ -1009,6 +1009,7 @@ pomngUI.perf.init = function() {
 	this.poll_running = false;
 	this.max_time = 60 * 5;
 	
+	window.addEventListener("pomng.registry.instance.remove", pomngUI.perf.evtRemoveInstance);
 }
 
 pomngUI.perf.activate = function() {
@@ -1304,7 +1305,7 @@ pomngUI.perf.templates = [
 				values: function() { return Object.keys(pomng.registry.classes.input.instances).sort() }
 
 			} ],
-		valid: function () {Object.keys(pomng.registry.classes.input.instances).length > 0},
+		valid: function () {return Object.keys(pomng.registry.classes.input.instances).length > 0},
 		perfs: function (params) {
 			var perfs = [];
 			var param = params[0];
@@ -1323,7 +1324,7 @@ pomngUI.perf.templates = [
 				values: function() { return Object.keys(pomng.registry.classes.input.instances).sort() }
 
 			} ],
-		valid: function () {Object.keys(pomng.registry.classes.input.instances).length > 0},
+		valid: function () {return Object.keys(pomng.registry.classes.input.instances).length > 0},
 		perfs: function (params) {
 			var perfs = [];
 			var param = params[0];
@@ -1535,6 +1536,28 @@ pomngUI.perf.graphConfig = function(graph_id) {
 		}
 	});
 
+}
 
+pomngUI.perf.evtRemoveInstance = function(event) {
 
+	var cls_name = event.detail.cls_name;
+	var inst_name = event.detail.instance_name;
+
+	var perf_names = Object.keys(pomngUI.perf.perfs);
+	for (var i = 0; i < perf_names.length; i++) {
+		var perf_name = perf_names[i];
+		var perf = pomngUI.perf.perfs[perf_name];
+		if (perf.class == cls_name && perf.instance == inst_name) {
+			for (var j = 0; j < pomngUI.perf.graphs.length; j++) {
+				var graph = pomngUI.perf.graphs[i];
+				if (graph.perfs.indexOf(perf_name) != -1) {
+					pomngUI.perf.removePerfFromGraph(j, perf_name);
+				}
+				if (graph.perfs.length == 0) {
+					pomngUI.perf.removeGraph(j);
+					j--;
+				}
+			}
+		}
+	}
 }
