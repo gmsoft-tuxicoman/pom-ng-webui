@@ -233,7 +233,7 @@ pomng.registry.update = function() {
 
 					// Send a delete item for all the intances that were not present in this update
 					for (var j = 0; j < old_instances.length; j++) {
-						pomng.registry.classes[cls.name].instances[old_instances[j]] = undefined;
+						delete pomng.registry.classes[cls.name].instances[old_instances[j]];
 						var event = new CustomEvent("pomng.registry.instance.remove", { detail: { cls_name: cls.name, instance_name: old_instances[j] }});
 						window.dispatchEvent(event);
 					}
