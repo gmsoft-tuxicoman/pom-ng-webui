@@ -65,7 +65,7 @@ pomng.poll = function() {
 				// We need to reload everything since main serial decreased
 				// It means the program was restarted 
 				// Throw a connection error event
-				var event = new CustomEvent("pomng.conn_error", { detail: { status: jqXHR.status, error: error }});
+				var event = new CustomEvent("pomng.conn_error", { detail: { status: jqXHR.status, error: "Server side restarted" }});
 				window.dispatchEvent(event);
 				return;
 			}
@@ -284,63 +284,82 @@ pomng.logs.update = function() {
 pomng.monitor = {};
 pomng.monitor.poll_timeout = 60;
 pomng.monitor.evt_listeners = {};
+pomng.monitor.evt_listeners_pending = [];
 pomng.monitor.sess_id = -1;
-pomng.monitor.eventListenerRegister = function(name, callback, context) {
 
+
+pomng.monitor.eventListenerRegisterPending = function() {
+
+	
+	var listener = pomng.monitor.evt_listeners_pending.shift();
+
+	if (!listener)
+		return;
+	pomng.call("monitor.eventAddListener",
+	
+		function(response, status, jqXHR) {
+			var id = response[0];
+			pomng.monitor.evt_listeners[id] = { evt: listener.evt, callback: listener.callback, context: listener.context, enabled: true };
+			listener.idCallback.call(listener.context, id);
+
+			pomng.monitor.eventListenerRegisterPending();
+		},
+		
+		[ pomng.monitor.sess_id, listener.evt, listener.filter ]);
+
+}
+
+pomng.monitor.eventListenerRegister = function(evt, filter, callback, context, idCallback) {
+
+	if (typeof filter != "string")
+		filter = "";
+
+	
 	if (pomng.monitor.sess_id == -1) {
+
 		// Start a monitor session
 		pomng.monitor.sess_id = -2;
 		pomng.call("monitor.start", 
 			function(response, status, jqXHR) {
 				pomng.monitor.sess_id = response[0];
-				// Register all the events
-				var event_names = Object.keys(pomng.monitor.evt_listeners);
-				for (var i = 0; i < event_names.length; i++) {
-					var evt_listeners = pomng.monitor.evt_listeners[event_names[i]];
-					for (var j = 0; j < evt_listeners.length; j++) {
-						pomng.call("monitor.eventAdd", null, [ pomng.monitor.sess_id, evt_listeners[j].name]);
-					}
-				}
+				// Register all the event listeners one by one
+
+				pomng.monitor.eventListenerRegisterPending();
+			
+				// Start polling
 				pomng.monitor.poll();
 
 			}, [ pomng.monitor.poll_timeout ]);
 
 	} else if (pomng.monitor.sess_id >= 0) {
-		pomng.call("monitor.eventAdd", null, [ pomng.monitor.sess_id, name]);
+		pomng.call("monitor.eventAddListener", function(response, status, jqXHR) {
+				var id = response[0];
+				pomng.monitor.evt_listeners[id] = { evt: evt, callback: callback, context: context, idCallback: idCallback, enabled: true };
+			}, [ pomng.monitor.sess_id, evt, filter ]);
 	}
+
+	// Add the listener to the pending list
+	pomng.monitor.evt_listeners_pending.push({evt: evt, filter: filter, callback: callback, context: context, idCallback: idCallback });
 
 
 	
-	if (!(name in pomng.monitor.evt_listeners))
-		pomng.monitor.evt_listeners[name] = [];
-
-	pomng.monitor.evt_listeners[name].push({name: name, callback: callback, context: context});
 
 }
 
-pomng.monitor.eventListenerUnregister = function(name, context) {
+pomng.monitor.eventListenerUnregister = function(id) {
 
-	var listeners = pomng.monitor.evt_listeners[name];
+	pomng.monitor.evt_listeners[id].enabled = false;
 
-	for (var i = 0; i < listeners.length; i++) {
-		if (listeners[i].context == context) {
-			listeners.splice(i, 1);
-			break;
-		}
-	}
-
-	if (listeners.length == 0) {
-		// Remove the event from the monitoring list
-		delete pomng.monitor.evt_listeners[name];
-		pomng.call("monitor.eventRemove", null, [ pomng.monitor.sess_id, name]);
-	}
-
-	if (Object.keys(pomng.monitor.evt_listeners).length == 0) {
-		// Nothing is being monitored. Stop polling
-		pomng.call("monitor.stop", null, [ pomng.monitor.sess_id ]);
-		pomng.monitor.sess_id = -1;		
-	}
-
+	pomng.call("monitor.eventRemoveListener", 
+		function (response, status, jqXHR) {
+			
+			delete pomng.monitor.evt_listeners[id];
+			if (Object.keys(pomng.monitor.evt_listeners).length == 0) {
+				// Nothing is being monitored. Stop polling
+				pomng.call("monitor.stop", null, [ pomng.monitor.sess_id ]);
+				pomng.monitor.sess_id = -1;		
+			}
+		}, [ pomng.monitor.sess_id, $.xmlrpc.force('i8', id) ]);
 
 }
 
@@ -352,9 +371,15 @@ pomng.monitor.poll = function() {
 			var rsp = response[0];
 			for (var i = 0; i < rsp.length; i++) {
 				var rspevt = rsp[i];
-				var evt_listeners = pomng.monitor.evt_listeners[rspevt['event']];
-				for (var j = 0; j < evt_listeners.length; j++)
-					evt_listeners[j].callback.call(evt_listeners[j].context, rspevt);
+				var evt_listeners_id = rspevt['listeners'];
+				for (var j = 0; j < evt_listeners_id.length; j++) {
+					var id = evt_listeners_id[j];
+					if (!id in pomng.monitor.evt_listeners)
+						// Listener not found
+						continue;
+					var listener = pomng.monitor.evt_listeners[id];
+					listener.callback.call(listener.context, rspevt);
+				}
 			}
 
 			// Restart polling if we are monitoring stuff
