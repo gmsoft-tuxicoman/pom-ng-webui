@@ -769,6 +769,7 @@ pomngUI.logs.init = function() {
 
 	window.addEventListener("pomng.logs.new", function(event) { pomngUI.logs.append(event.detail.id); });
 	$("#logs_content").resize(pomngUI.logs.resize);
+	window.addEventListener("resize", pomngUI.logs.resize);
 	window.addEventListener("pomng.registry.ready", function (event) { $("#logs_content").show(); pomngUI.logs.resize();});
 
 	pomngUI.logs.display_level = 3;
@@ -973,6 +974,8 @@ pomngUI.weboutput.add = function(type) {
 				}
 
 				var elem_weboutput = $("#weboutput");
+				if (!weboutput[type].counter)
+					weboutput[type].counter = 0;
 				weboutput[type].counter++;
 				var id = type + '-' + weboutput[type].counter;
 				elem_weboutput.find(".ui-tabs-nav").append('<li id="li_' + id + '"><a href="#' + id + '">Output ' + name + '</a><span class="ui-icon ui-icon-close icon-btn"></span></li>');
