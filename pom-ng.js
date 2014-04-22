@@ -285,8 +285,31 @@ pomng.monitor = {};
 pomng.monitor.poll_timeout = 60;
 pomng.monitor.evt_listeners = {};
 pomng.monitor.evt_listeners_pending = [];
+pomng.monitor.pload_listeners = {};
+pomng.monitor.pload_listeners_pending = [];
 pomng.monitor.sess_id = -1;
 
+pomng.monitor.start = function() {
+
+	if (pomng.monitor.sess_id != -1)
+		return;
+
+	pomng.monitor.sess_id = -2;
+	pomng.call("monitor.start", 
+		function(response, status, jqXHR) {
+			pomng.monitor.sess_id = response[0];
+
+			// Register all the event listeners one by one
+			pomng.monitor.eventListenerRegisterPending();
+
+			// Register all pload listeners one by one
+			pomng.monitor.ploadListenerRegisterPending();
+		
+			// Start polling
+			pomng.monitor.poll();
+
+	}, [ pomng.monitor.poll_timeout ]);
+}
 
 pomng.monitor.eventListenerRegisterPending = function() {
 
@@ -315,34 +338,61 @@ pomng.monitor.eventListenerRegister = function(evt, filter, callback, context, i
 		filter = "";
 
 	
-	if (pomng.monitor.sess_id == -1) {
-
-		// Start a monitor session
-		pomng.monitor.sess_id = -2;
-		pomng.call("monitor.start", 
-			function(response, status, jqXHR) {
-				pomng.monitor.sess_id = response[0];
-				// Register all the event listeners one by one
-
-				pomng.monitor.eventListenerRegisterPending();
-			
-				// Start polling
-				pomng.monitor.poll();
-
-			}, [ pomng.monitor.poll_timeout ]);
-
-	} else if (pomng.monitor.sess_id >= 0) {
+	if (pomng.monitor.sess_id >= 0) {
 		pomng.call("monitor.eventAddListener", function(response, status, jqXHR) {
 				var id = response[0];
 				pomng.monitor.evt_listeners[id] = { evt: evt, callback: callback, context: context, idCallback: idCallback, enabled: true };
+				idCallback.call(context, id);
 			}, [ pomng.monitor.sess_id, evt, filter ]);
+	} else {
+
+		// Add the listener to the pending list
+		pomng.monitor.evt_listeners_pending.push({evt: evt, filter: filter, callback: callback, context: context, idCallback: idCallback });
+
+		pomng.monitor.start();
 	}
 
-	// Add the listener to the pending list
-	pomng.monitor.evt_listeners_pending.push({evt: evt, filter: filter, callback: callback, context: context, idCallback: idCallback });
+}
 
+pomng.monitor.ploadListenerRegisterPending = function() {
 
-	
+	var listener = pomng.monitor.pload_listeners_pending.shift();
+
+	if (!listener)
+		return;
+
+	pomng.call("monitor.ploadAddListener",
+
+		function(response, status, jqXHR) {
+			var id = response[0];
+			pomng.monitor.pload_listeners[id] = { callback: listener.callback, context : listener.context, enabled : true };
+			listener.idCallback.call(listener.context, id);
+
+			pomng.monitor.ploadListenerRegisterPending();
+		},
+
+		[ pomng.monitor.sess_id, listener.filter ]);
+
+}
+
+pomng.monitor.ploadListenerRegister = function(filter, callback, context, idCallback) {
+
+	if (typeof filter != "string")
+		filter = "";
+
+	if (pomng.monitor.sess_id >= 0) {
+		pomng.call("monitor.ploadAddListener", function(response, status, jqXHR) {
+				var id = response[0];
+				pomng.monitor.pload_listeners[id] = { callback: callback, context: context, idCallback: idCallback, enabled: true };
+			}, [ pomng.monitor.sess_id, filter ]);
+
+	} else {
+		// Add the listener to the pending list
+		pomng.monitor.pload_listeners_pending.push({filter: filter, callback: callback, context: context, idCallback: idCallback });
+
+		pomng.monitor.start();
+
+	}
 
 }
 
@@ -352,16 +402,40 @@ pomng.monitor.eventListenerUnregister = function(id) {
 
 	pomng.call("monitor.eventRemoveListener", 
 		function (response, status, jqXHR) {
-			
 			delete pomng.monitor.evt_listeners[id];
-			if (Object.keys(pomng.monitor.evt_listeners).length == 0) {
-				// Nothing is being monitored. Stop polling
-				pomng.call("monitor.stop", null, [ pomng.monitor.sess_id ]);
-				pomng.monitor.sess_id = -1;		
-			}
+
+			// Stop if nothing is monitored
+			pomng.monitor.stop();
+
 		}, [ pomng.monitor.sess_id, $.xmlrpc.force('i8', id) ]);
 
 }
+
+
+pomng.monitor.ploadListenerUnregister = function(id) {
+
+	pomng.monitor.pload_listeners[id].enabled = false;
+
+	pomng.call("monitor.ploadRemoveListener",
+		function (response, status, jqXHR) {
+			delete pomng.monitor.evt_listeners[id];
+
+			// Stop if nothing is being monitored
+			pomng.monitor.stop();
+
+		}, [ pomng.monitor.sess_id, $.xmlrpc.force('i8', id) ]);
+}
+
+pomng.monitor.stop = function() {
+
+	if (Object.keys(pomng.monitor.evt_listeners).length == 0 &&
+		Object.keys(pomng.monitor.pload_listeners).length == 0) {
+		
+		pomng.call("monitor.stop", null, [ pomng.monitor.sess_id ]);
+		pomng.monitor.sess_id = -1;
+	}	
+}
+
 
 pomng.monitor.poll = function() {
 	$.xmlrpc({
@@ -369,16 +443,33 @@ pomng.monitor.poll = function() {
 		methodName: "monitor.poll",
 		success: function (response, status, jqXHR) {
 			var rsp = response[0];
-			for (var i = 0; i < rsp.length; i++) {
-				var rspevt = rsp[i];
-				var evt_listeners_id = rspevt['listeners'];
+			var evts = rsp.events;
+			for (var i = 0; i < evts.length; i++) {
+				var evt = evts[i];
+				var evt_listeners_id = evt.listeners;
 				for (var j = 0; j < evt_listeners_id.length; j++) {
 					var id = evt_listeners_id[j];
 					if (!id in pomng.monitor.evt_listeners)
 						// Listener not found
 						continue;
 					var listener = pomng.monitor.evt_listeners[id];
-					listener.callback.call(listener.context, rspevt);
+					if (listener.enabled)
+						listener.callback.call(listener.context, evt);
+				}
+			}
+
+			var ploads = rsp.ploads;
+			for (var i = 0; i < ploads.length; i++) {
+				var pload = ploads[i];
+				var pload_listeners_id = pload.listeners;
+				for (var j = 0; j < pload_listeners_id.length; j++) {
+					var id = pload_listeners_id[j];
+					if (!id in pomng.monitor.pload_listeners)
+						// Listener not found
+						continue;
+					var listener = pomng.monitor.pload_listeners[id];
+					if (listener.enabled)
+						listener.callback.call(listener.context, pload);
 				}
 			}
 
