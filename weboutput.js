@@ -1,6 +1,11 @@
 
+//
+// CORE stuff
+//
+
 function weboutput() {
 	this.evt_listeners = [];
+	this.pload_listeners = [];
 }
 
 weboutput.prototype.eventListen = function (evtName, filter, callback) {
@@ -11,16 +16,33 @@ weboutput.prototype.eventListenCallback = function(id) {
 	this.evt_listeners.push(id);
 }
 
+weboutput.prototype.ploadListen = function (filter, callback) {
+	pomng.monitor.ploadListenerRegister(filter, callback, this, this.ploadListenCallback);
+}
+
+weboutput.prototype.ploadListenCallback = function(id) {
+	this.pload_listeners.push(id);
+}
+
 weboutput.prototype.cleanup = function() {
 
 	while (this.evt_listeners.length > 0) {
-		var id = this.evt_listeners.shift()
+		var id = this.evt_listeners.shift();
 		pomng.monitor.eventListenerUnregister(id);
+	}
+
+	while (this.pload_listeners.length > 0) {
+		var id = this.pload_listeners.shift();
+		pomng.monitor.ploadListenerUnregister(id);
 	}
 
 }
 
-weboutput.outputs = [ 'arpwatch', 'wallofsheep' ];
+weboutput.outputs = [ 'arpwatch', 'wallofsheep', 'images' ];
+
+//
+// ARPWATCH
+//
 
 weboutput.arpwatch = function(elem) {
 	this.elem = elem;
@@ -31,7 +53,6 @@ weboutput.arpwatch = function(elem) {
 	this.eventListen("arp_sta_changed", null, weboutput.arpwatch.process_event);
 }
 
-weboutput.arpwatch.counter = 0;
 weboutput.arpwatch.description = "Show discovered stations.";
 weboutput.arpwatch.prototype = new weboutput();
 weboutput.arpwatch.prototype.constructor = weboutput.arpwatch;
@@ -69,7 +90,9 @@ weboutput.arpwatch.process_event = function(evt) {
 
 }
 
-
+//
+// WALL OF SHEEP
+//
 
 
 weboutput.wallofsheep = function(elem) {
@@ -143,3 +166,28 @@ weboutput.wallofsheep.process_event = function(evt) {
 	}
 
 }
+
+
+//
+// IMAGES
+//
+
+
+
+weboutput.images = function(elem) {
+	this.elem = elem;
+	this.elem.html('<h2>Output Images</h2><div id="content"></div>');
+
+	this.ploadListen("data.height >= 300 && data.width >= 300", weboutput.images.process_pload);
+
+}
+
+weboutput.images.process_pload = function (pload) {
+
+	var elem = this.elem.find("#content").append('<img src="/pload/' + pload.id + '"/>');
+
+}
+
+weboutput.images.description = "Show captured images.";
+weboutput.images.prototype = new weboutput();
+weboutput.images.prototype.constructor = weboutput.images;
