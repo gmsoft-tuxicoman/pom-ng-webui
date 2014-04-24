@@ -443,7 +443,7 @@ pomng.monitor.poll = function() {
 		methodName: "monitor.poll",
 		success: function (response, status, jqXHR) {
 			var rsp = response[0];
-			var evts = rsp.events;
+			var evts = rsp.events || [];
 			for (var i = 0; i < evts.length; i++) {
 				var evt = evts[i];
 				var evt_listeners_id = evt.listeners;
@@ -458,7 +458,7 @@ pomng.monitor.poll = function() {
 				}
 			}
 
-			var ploads = rsp.ploads;
+			var ploads = rsp.ploads || [];
 			for (var i = 0; i < ploads.length; i++) {
 				var pload = ploads[i];
 				var pload_listeners_id = pload.listeners;
@@ -501,4 +501,10 @@ pomng.monitor.poll_error = function(jqXHR, status, error) {
 	// TODO improve error message and handling
 	alert("Monitor polling failed !");
 
+}
+
+pomng.htmlEscape = function(str) {
+	var div = document.createElement('div');
+	div.appendChild(document.createTextNode(str));
+	return div.innerHTML;
 }
