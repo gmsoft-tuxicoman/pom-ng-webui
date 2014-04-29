@@ -4,42 +4,53 @@
 	<title>POM-NG WebUI</title>
 	<meta charset="utf-8"/>
 	<link rel="stylesheet" href="jquery/ui/css/smoothness/jquery-ui-1.10.4.custom.min.css"/>
+	<link rel="stylesheet" href="jquery/jstree/themes/default/style.min.css"/>
 	<link rel="stylesheet" href="pom-ng.css"/>
 	<script src="jquery/jquery-1.11.0.min.js"></script>
 	<script src="jquery/ui/js/jquery-ui-1.10.4.custom.min.js"></script>
 	<script src="jquery/xmlrpc/jquery.xmlrpc.js"></script>
 	<script src="jquery/flot/jquery.flot.js"></script>
 	<script src="jquery/flot/jquery.flot.time.js"></script>
+	<script src="jquery/jstree/jstree.min.js"></script>
 	<script src="pom-ng.js"></script>
 	<script src="pom-ng-ui.js"></script>
+	<script src="pom-ng-ui.home.js"></script>
+	<script src="pom-ng-ui.registry.js"></script>
+	<script src="pom-ng-ui.weboutput.js"></script>
+	<script src="pom-ng-ui.logs.js"></script>
+	<script src="pom-ng-ui.perf.js"></script>
 	<script src="weboutput.js"></script>
 </head>
 <body>
 
 <div id="root">
 
-	<h1>POM-NG WebUI !</h1>
+	<div id="menu_toolbar" class="ui-widget ui-widget-header toolbar">
+		<span id="menu_title">POM-NG Web UI</span>
+		<!--<button id="menu_home">Home</button>-->
+		<button id="menu_weboutput">Web Output</button>
+		<button id="menu_perf">Performance</button>
+		<button id="menu_registry">Registry</button>
+		<button id="menu_logs">Logs</button>
+	</div>
 
-	<div id="menu" class="ui-widget">
+	<div id="main_content">
 		<ul>
-			<li><a href="#tab_summary">Summary</a></li>
-			<li><a href="#tab_weboutput">Web output</a></li>
-			<li><a href="#tab_performance">Performance</a></li>
-			<li><a href="#tab_registry">Registry</a></li>
-			<li><a href="#tab_config">Load/Save</a></li>
+			<li id="li_home"><a href="#home">Home</a></li>
 		</ul>
 		
-		<div id="tab_summary">
-
-			<div id="toolbar" class="ui-widget-header ui-corner-all">
+		<div id="home">
+			<div id="toolbar" class="ui-widget-header ui-corner-all toolbar">
 				<button id="add_input">Add input</button>
 				<button id="add_output">Add output</button>
+				<button id="save_as">Save config as</button>
+				<button id="reset">Reset config</button>
 			</div>
 
 			<h2>Inputs :</h2>
 			<table id="tbl_input" class="ui-widget ui-widget-content ui-table">
 				<thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Status</td><td>Actions</td></tr></thead>
-				<tbody></tbody> 
+				<tbody></tbody>
 			</table>
 
 			<h2>Outputs :</h2>
@@ -47,73 +58,16 @@
 				<thead><tr class="ui-widget-header"><td>Name</td><td>Type</td><td>Status</td><td>Actions</td></tr></thead>
 				<tbody></tbody>
 			</table>
-
-		</div>
-
-		<div id="tab_weboutput">
-			<div id="weboutput">
-				<ul>
-					<li><a href="#weboutput_home">Home</a></li>
-				</ul>
-				<div id="weboutput_home">
-					<h2>Available outputs :</h2>
-					<table class="ui-widget ui-widget-content ui-table">
-						<thead><tr class="ui-widget-header"><td>Name</td><td>Description</td></tr></thead>
-						<tbody id="weboutput_list"></tbody>
-					</table>
-				</div>
-			</div>
-		</div>
-
-		<div id="tab_performance">
-			<div id="performance">
-				<div id="toolbar" class="ui-widget-header ui-corner-all">
-					<button id="add_graph">Add graph</button>
-				</div>
-				<div id="graphs">
-
-				</div>
-			</div>
-		</div>
-
-
-		<div id="tab_registry">
-			<div id="registry" class="ui-widget-header ui-corner-all" style="float:left;margin-right:0.5em"></div>
-			<div id="detail" style="display:table">Click on an item for details.</div>
-		</div>
-
-		<div id="tab_config">
-			<div id="toolbar" class="ui-widget-header ui-corner-all">
-				<button id="save_as">Save as</button>
-				<button id="reset">Reset</button>
-			</div>
-
+			
 			<h2>Configurations :</h2>
 			<table id="tbl_config" class="ui-widget ui-widget-content ui-table">
 				<thead><tr class="ui-widget-header"><td>Name</td><td>Last modification</td><td>Actions</td></tr></thead>
 				<tbody></tbody>
 			</table>
 		</div>
-
 	</div>
-
-
 </div>
 
-<div id="logs" class="ui-widget logs logs-min">
-	<div id="logs_hdr" class="ui-widget-header logs-hdr">
-	Logs
-	<span style="float:right">
-		<span class="ui-icon ui-icon-gear icon-btn" onclick="pomngUI.logs.paramDialog()"></span>
-		<span id="log_icon_min" class="ui-icon ui-icon-minus icon-btn" style="display:none" onclick="pomngUI.logs.size('min')"></span>
-		<span id="log_icon_normal" class="ui-icon ui-icon-plus icon-btn" onclick="pomngUI.logs.size('normal')"></span>
-		<span id="log_icon_full" class="ui-icon ui-icon-arrowthickstop-1-n icon-btn" onclick="pomngUI.logs.size('full')"></span>
-		<span id="log_icon_normal2" class="ui-icon ui-icon-arrowthickstop-1-s icon-btn" style="display:none" onclick="pomngUI.logs.size('normal')"></span>
-	</span>
-	
-	</div>
-	<div class="ui-widget-content logs-content" id="logs_content" style="display:none"><table id="tbl_logs" style="width:100%"></table></div>
-</div>
 
 <div id="dlg_add" style="display:none">
 	<table>
@@ -138,17 +92,6 @@
 	<p> Save configuration as :<br/>
 	<input id="config_name" type="text" title="Configuration name"/>
 	</p>
-</div>
-
-<div id="dlg_log_param" style="display:none">
-	<p>Log configuration:</p>
-	<p>Show level up to : <select id="dbg_lvl">
-		<option value="1">Error</option>
-		<option value="2">Warning</option>
-		<option value="3">Info</option>
-		<option value="4">Debug</option>
-	</select></p>
-
 </div>
 
 <div id="dlg_weboutput_add" style="display:none">

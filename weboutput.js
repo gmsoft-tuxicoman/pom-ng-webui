@@ -24,6 +24,14 @@ weboutput.prototype.ploadListenCallback = function(id) {
 	this.pload_listeners.push(id);
 }
 
+weboutput.prototype.ploadEventsListen = function (id) {
+	this.pload_events_listen = true;
+	pomng.monitor.ploadEventsListenStart();
+}
+
+weboutput.prototype.activate = pomngUI.panel.prototype.activate;
+weboutput.prototype.deactivate = pomngUI.panel.prototype.deactivate;
+
 weboutput.prototype.cleanup = function() {
 
 	while (this.evt_listeners.length > 0) {
@@ -35,6 +43,12 @@ weboutput.prototype.cleanup = function() {
 		var id = this.pload_listeners.shift();
 		pomng.monitor.ploadListenerUnregister(id);
 	}
+
+	if (this.pload_events_listen)
+		pomng.monitor.ploadEventsListenStop();
+
+	delete pomngUI.weboutputs[this.elem[0].id];
+	console.log("Weboutput cleaned up");
 
 }
 
@@ -178,6 +192,7 @@ weboutput.images = function(elem) {
 	this.elem = elem;
 	this.elem.html('<h2>Output Images</h2><div id="content"></div>');
 
+	pomng.monitor.ploadEventsListenStart();
 	this.ploadListen("data.height >= 300 && data.width >= 300", weboutput.images.process_pload);
 
 }

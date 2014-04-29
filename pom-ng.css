@@ -1,22 +1,22 @@
-
 body {
 	margin: 0px;
 }
 
-div#root {
-	padding-left: 8px;
-	padding-right: 8px;
-	overflow: auto;
+.icon-btn {
+	cursor: pointer;
+	display: inline-block;
 }
 
 h1 {
 	text-align:center;
 }
 
-h2.details {
+h2.registry_details {
 	margin-top: 0px;
+	margin-bottom: 0px;
 }
-h3.details {
+
+h3.registry_details {
 	margin-bottom: 0px;
 	display: inline-block;
 }
@@ -26,11 +26,53 @@ h4 {
 	margin: 0;
 }
 
-#toolbar {
+#menu_title {
+	font-size: 1.2em;
+	margin-left: 10px;
+	margin-right: 1em;
+	vertical-align: sub;
+}
+
+#menu_toolbar {
+	padding-left: 0px;
+	padding-right: 0px;
+	margin-left: 0px;
+	margin-right: 0px;
+	border: none;
+	width: 100%;
+}
+
+#menu_toolbar button {
+	margin: 2px;
+}
+
+#main_content {
+	width: 100%;
+	padding-left: 0px;
+	padding-right: 0px;
+	border: none;
+	margin-left: 0px;
+	margin-right: 0px;
+}
+
+.toolbar {
 	padding: 4px;
 	display:inline-block;
 }
 
+#registry {
+	padding: 5px;
+}
+
+#registry_tree {
+	float:left;
+	padding: 5px;
+}
+
+#registry_content {
+	display:table;
+	padding: 5px;
+}
 
 .ui-table {
 	margin: 0;
@@ -44,105 +86,12 @@ h4 {
 	text-align: left;
 }
 
-
-/* Tab stuff below for the menu */
-
-.ui-tabs.ui-tabs-vertical {
-	padding: 0;
+.ui-table tr:nth-child(even) {
+	background: #F0F0F0;
 }
 
-.ui-tabs.ui-tabs-vertical > .ui-tabs-nav {
-	float: left;
-	background: #CCC;
-	border-radius: 4px 0 0 4px;
-	border: 1px solid gray;
-}
-
-.ui-tabs.ui-tabs-vertical > .ui-tabs-nav li {
-	clear: left;
+#tbl_logs {
 	width: 100%;
-	margin: 0.2em 0;
-	border: 1px solid gray;
-	border-width: 1px 0 1px 1px;
-	border-radius: 4px 0 0 4px;
-	overflow: hidden;
-	position: relative;
-	right: -2px;
-	z-index: 2;
-}
-
-.ui-tabs.ui-tabs-vertical > .ui-tabs-nav li a {
-	display: block;
-	width: 100%;
-	padding: 0.6em 1em;
-}
-
-.ui-tabs.ui-tabs-vertical > .ui-tabs-nav li a:hover {
-	cursor: pointer;
-	display: inline-block;
-}
-
-
-.ui-tabs.ui-tabs-vertical > .ui-tabs-nav li.ui-tabs-active {
-	margin-bottom: 0.2em;
-	padding-bottom: 0;
-}
-
-.ui-tabs.ui-tabs-vertical > .ui-tabs-nav li:last-child {
-	margin-bottom: 10px;
-}
-
-.ui-tabs.ui-tabs-vertical > .ui-tabs-panel {
-	overflow: auto;
-	border-left: 1px solid gray;
-	border-radius: 0;
-	position: relative;
-	left: -1px;
-	padding: 0 0 0 0.5em;
-	margin: 0;
-}
-
-#registry {
-	background: #CCC;
-}
-
-.no-close .ui-dialog-titlebar-close {
-	display: none
-}
-
-.icon-btn {
-	cursor: pointer;
-	display: inline-block;
-}
-
-
-.logs {
-	position: fixed;
-	bottom: 0px;
-	height: 11em;
-	width: 100%;
-	clear: both;
-}
-
-.logs-min {
-	height: 1.3em;
-}
-
-.logs-full {
-	height: 100%;
-}
-
-.logs-hdr {
-	height: 1.3em;
-}
-
-.logs-content {
-	overflow-y: auto;
-	font-size: small;
-}
-
-#tbl_logs tr:nth-child(odd) {
-	background: #DADADA;
 }
 
 .log_err {
@@ -156,13 +105,15 @@ h4 {
 .log_info {
 	color: black;
 }
+
 .log_debug {
 	color: blue;
 }
 
-#weboutput li .ui-icon-close { float: left; margin: 0.4em 0.2em 0 0; cursor: pointer; }
+#logs_toolbar {
+	margin-bottom: 1em;
+}
 
-
-.graph-container {
-	padding-top: 1em;
+#logs_lvl_radio {
+	display: inline-block;
 }

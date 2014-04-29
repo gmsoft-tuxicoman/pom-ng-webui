@@ -1,4 +1,3 @@
-
 $(document).ready( function() {
 	pomngUI.init();
 	pomng.init();
@@ -15,12 +14,12 @@ pomng.init = function() {
 
 
 	pomng.serials = [];
-	pomng.serials["main"] = 0;
+	pomng.serials["registry"] = 0;
 	pomng.serials["log"] = 0;
 	pomng.registry.classes = {};
 	pomng.registry.loading = 0;
 
-	pomng.logs.entries = {};
+	pomng.logs.last_id = 0;
 
 	pomng.poll_failed = 0;
 
@@ -30,7 +29,7 @@ pomng.init = function() {
 }
 
 pomng.call = function(method, success, params, context) {
-	$.xmlrpc({
+	return $.xmlrpc({
 		url: this.url,
 		methodName: method,
 		success: success,
@@ -54,14 +53,14 @@ pomng.poll = function() {
 
 	$.xmlrpc({
 		url: pomng.url,
-		methodName: "core.serialPoll",
+		methodName: "registry.poll",
 		success: function (response, status, jqXHR) {
 
 			pomng.poll_failed = 0;
 
-			var serials = response[0];
+			var serial = response[0];
 
-			if (pomng.serials["main"] > serials["main"]) {
+			if (pomng.serials["registry"] > serial) {
 				// We need to reload everything since main serial decreased
 				// It means the program was restarted 
 				// Throw a connection error event
@@ -70,26 +69,26 @@ pomng.poll = function() {
 				return;
 			}
 
-			if (pomng.serials["registry"] != serials["registry"]) {
+			if (pomng.serials["registry"] != serial) {
 				pomng.registry.update();
 			}
 
-			if (pomng.serials["log"] != serials["log"]) {
-				pomng.logs.update();
-			}
-
-			pomng.serials = serials;
+			pomng.serials["registry"] = serial;
 
 
 			pomng.poll();
 
 		},
-		params: [ pomng.serials["main"] ],
+		params: [ pomng.serials["registry"] ],
 		error: pomng.poll_error,
 	});
 }
 
 pomng.poll_error = function(jqXHR, status, error) {
+
+	// If we aborted ourselfs, there is no cause for alarm !
+	if (status == "abort")
+		return;
 
 	if ((jqXHR.status == 502 || jqXHR.status == 503) && pomng.poll_failed < 10) {
 		// Most probably a timeout, restart polling after some time
@@ -255,27 +254,43 @@ pomng.registry.update = function() {
  */
 
 pomng.logs = {};
-pomng.logs.update = function() {
 
-	pomng.call("core.getLog",
-		function (response, status, jqXHR) {
+
+pomng.logs.pollStart = function(log_level, max_results) {
+
+	pomng.logs.ajax_req = $.xmlrpc({
+		url: pomng.url,
+		methodName: 'core.pollLog',
+		success: function(response, status, jqXHR) {
+			delete pomng.logs.ajax_req;
 			var logs = response[0];
 
 			for (var i = 0; i < logs.length; i++) {
 				var log = logs[i];
-				if (pomng.logs.entries[log.id] !== undefined)
-					continue;
-				pomng.logs.entries[log.id] = log;
-				var event = new CustomEvent("pomng.logs.new", { detail: { id: log.id } });
+				var event = new CustomEvent("pomng.logs.new", { detail: { entry: log } });
 				window.dispatchEvent(event);
+				if (pomng.logs.last_id < log.id)
+					pomng.logs.last_id = log.id;
 			}
-
+			// Restart polling
+			pomng.logs.pollStart(log_level, max_results);
 		},
-		[ pomng.serials["log"] ]);
+
+		params: [ pomng.logs.last_id, log_level, max_results ],
+		error: pomng.poll_error
+	});
 
 }
 
+pomng.logs.pollStop = function() {
 
+	if (pomng.logs.ajax_req) {
+		pomng.logs.ajax_req.abort();
+		delete pomng.logs.ajax_req;
+	}
+	pomng.logs.entries = {};
+	pomng.logs.last_id = 0;
+}
 
 /*
  * Monitoring stuff
@@ -287,6 +302,7 @@ pomng.monitor.evt_listeners = {};
 pomng.monitor.evt_listeners_pending = [];
 pomng.monitor.pload_listeners = {};
 pomng.monitor.pload_listeners_pending = [];
+pomng.monitor.pload_events_listen = 0;
 pomng.monitor.sess_id = -1;
 
 pomng.monitor.start = function() {
@@ -304,7 +320,11 @@ pomng.monitor.start = function() {
 
 			// Register all pload listeners one by one
 			pomng.monitor.ploadListenerRegisterPending();
-		
+
+			// Listen to the payload generating events if requested
+			if (pomng.monitor.pload_events_listen)
+				pomng.call("monitor.ploadEventsListen", null, [ pomng.monitor.sess_id, true ]);
+
 			// Start polling
 			pomng.monitor.poll();
 
@@ -411,6 +431,24 @@ pomng.monitor.eventListenerUnregister = function(id) {
 
 }
 
+pomng.monitor.ploadEventsListenStart = function() {
+
+	if (!pomng.monitor.pload_events_listen && pomng.monitor.sess_id >= 0)
+		pomng.call("monitor.ploadEventsListen", null, [ pomng.monitor.sess_id, true ]);
+
+	pomng.monitor.pload_events_listen++;
+
+}
+
+pomng.monitor.ploadEventsListenStop = function() {
+
+	pomng.monitor.pload_events_listen--;
+
+	if (!pomng.monitor.pload_events_listen && pomng.monitor.sess_id >= 0)
+		pomng.call("monitor.ploadEventsListen", null, [ pomng.monitor.sess_id, false ]);
+
+
+}
 
 pomng.monitor.ploadListenerUnregister = function(id) {
 
@@ -418,7 +456,7 @@ pomng.monitor.ploadListenerUnregister = function(id) {
 
 	pomng.call("monitor.ploadRemoveListener",
 		function (response, status, jqXHR) {
-			delete pomng.monitor.evt_listeners[id];
+			delete pomng.monitor.pload_listeners[id];
 
 			// Stop if nothing is being monitored
 			pomng.monitor.stop();
@@ -474,7 +512,7 @@ pomng.monitor.poll = function() {
 			}
 
 			// Restart polling if we are monitoring stuff
-			if (Object.keys(pomng.monitor.evt_listeners).length > 0)
+			if (Object.keys(pomng.monitor.evt_listeners).length > 0 || Object.keys(pomng.monitor.pload_listeners).length > 0)
 				pomng.monitor.poll();
 		},
 
@@ -485,6 +523,7 @@ pomng.monitor.poll = function() {
 }
 
 pomng.monitor.poll_error = function(jqXHR, status, error) {
+
 
 	if ((jqXHR.status == 502 || jqXHR.status == 503) && pomng.poll_failed < 10) {
 		// Most probably a timeout, restart polling after some time
@@ -499,7 +538,7 @@ pomng.monitor.poll_error = function(jqXHR, status, error) {
 	}
 
 	// TODO improve error message and handling
-	alert("Monitor polling failed !");
+	alert("Monitor polling failed ! Status : " + status);
 
 }
 
