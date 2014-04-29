@@ -276,6 +276,9 @@ pomngUI.panel.registry.prototype.evtUpdateInstance = function(cls_name, inst_nam
 	var tree = this.tree.jstree(true);
 	var node = tree.get_node('registry_tree_inst_' + cls_name + '_' + inst_name);
 
+	if (cls_name == this.selected_class && !this.selected_instance)
+		this.classDetail(cls_name);
+
 	if (node)
 		return;
 
@@ -290,6 +293,9 @@ pomngUI.panel.registry.prototype.evtRemoveInstance = function(cls_name, inst_nam
 
 	if (!node)
 		return;
+
+	if (cls_name == this.selected_class && !this.selected_instance)
+		this.classDetail(cls_name);
 
 	var selected = tree.is_selected(node);
 	if (selected) {
