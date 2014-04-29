@@ -18,6 +18,12 @@ pomngUI.panel.registry = function(elem) {
 
 	this.content = this.elem.find('#registry_content');
 
+	var self = this;
+	this.content.delegate("a#inst_add", "click", function(event) {
+		var inst_name = this.text;
+		pomngUI.dialog.instanceAdd(self.selected_class, inst_name);
+	})
+
 	var clss_name = Object.keys(pomng.registry.classes);
 
 	var tree = this.tree.jstree(true);
@@ -33,7 +39,7 @@ pomngUI.panel.registry = function(elem) {
 			tree.create_node('registry_tree_cls_' + cls.name, { id: 'registry_tree_inst_' + cls.name + '_' + instances_name[j], text: instances_name[j] }, 'last');
 
 	}
-	var self = this;
+
 	window.addEventListener("pomng.registry.instance.update", function(event) {
 		self.evtUpdateInstance(event.detail.cls_name, event.detail.instance_name);
 	});
@@ -59,10 +65,14 @@ pomngUI.panel.registry.prototype.node_changed = function(e, data) {
 		var par = data.instance.get_node(node.parent);
 		cls_name = par.text;
 		inst_name = node.text;
+		this.selected_class = cls_name;
+		this.selected_instance = inst_name;
 		this.instanceDetail(cls_name, inst_name);
 	} else {
 		// This is a class
 		cls_name = node.text;
+		this.selected_class = cls_name;
+		delete this.selected_instance;
 		this.classDetail(cls_name);
 	}
 }
@@ -99,10 +109,9 @@ pomngUI.panel.registry.prototype.classDetail = function(cls_name) {
 		html += '<h3 class="registry_details">Available instance types :</h3><table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Description</td></tr></thead><tbody>';
 		for (var i = 0; i < types_name.length; i++) {
 			var type = cls.available_types[types_name[i]];
-			html += '<tr><td><a href="javascript:pomngUI.dialog.instanceAdd(\'' + cls_name + '\', \'' + type.name + '\')">' + type.name + '</a></td><td>' + pomng.htmlEscape(type.description) + '</td></tr>';
+			html += '<tr><td><a href="#" id="inst_add">' + type.name + '</a></td><td>' + pomng.htmlEscape(type.description) + '</td></tr>';
 		}
 		html += '</tbody></table>';
-
 	}
 
 
