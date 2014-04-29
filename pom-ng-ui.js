@@ -398,3 +398,68 @@ pomngUI.dialog.configSaveAs = function() {
 
 }
 
+pomngUI.dialog.perfAdd = function(cls_name, inst_name, perf_name) {
+
+
+	var perfPanel = pomngUI.main.panels.perf;
+
+	var options = '<option value="-1">&lt;New graph&gt;</option>';
+
+	if (perfPanel) {
+		for (var i = 0; i < perfPanel.graphs.length; i++) {
+			options += '<option value="' + i + '">' + perfPanel.graphs[i].title + '</option>';
+		}
+	}
+
+	$("#dlg_perf_add #graph").html(options);
+	$("#dlg_perf_add #graph_name input").val("");
+	$("#dlg_perf_add #graph_name").show();
+
+	$("#dlg_perf_add #graph").change(function() {
+		if ($("#dlg_perf_add #graph").val() == "-1") {
+			$("#dlg_perf_add #graph_name").show();
+		} else {
+			$("#dlg_perf_add #graph_name").hide();
+		}
+	});
+
+	$("#dlg_perf_add").dialog({
+		resizable: false,
+		modal: true,
+		width: "auto",
+		title: "Add a performance to a graph",
+		buttons: {
+			Ok: function () {
+				var perfPanel = pomngUI.main.panels.perf;
+
+				if (!perfPanel) {
+
+					var elem = pomngUI.main.addPanel("perf", "Performance");
+					perfPanel = new pomngUI.panel.perf(elem);
+					pomngUI.main.setPanel("perf", perfPanel);
+
+				}
+
+				var graph_id = parseInt($("#dlg_perf_add #graph").val());
+				if (graph_id == -1) {
+					var name = $("#dlg_perf_add #graph_name input").val();
+					if (name == "") {
+						alert("You must specify a graph title");
+						return;
+					}
+					graph_id = perfPanel.addGraph({width: "100%", height: "200px", title: pomng.htmlEscape(name) });
+				}
+
+				var perf = { class: cls_name, instance: inst_name, name: perf_name };
+				perfPanel.addPerfToGraph(graph_id, perf);
+
+				$(this).dialog("close");
+			},
+			Cancel: function() {
+				$(this).dialog("close");
+			}
+		}
+	});
+
+}
+

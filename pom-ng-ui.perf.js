@@ -418,64 +418,6 @@ pomngUI.panel.perf.prototype.templates = [
 ];
 
 
-pomngUI.panel.perf.prototype.addDialog = function(perf_str) {
-
-	var options = '<option value="-1">&lt;New graph&gt;</option>';
-	for (var i = 0; i < this.graphs.length; i++) {
-		options += '<option value="' + i + '">' + this.graphs[i].title + '</option>';
-	}
-
-	$("#dlg_perf_add #graph").html(options);
-	$("#dlg_perf_add #graph_name input").val("");
-	$("#dlg_perf_add #graph_name").show();
-
-	$("#dlg_perf_add #graph").change(function() {
-		if ($("#dlg_perf_add #graph").val() == "-1") {
-			$("#dlg_perf_add #graph_name").show();
-		} else {
-			$("#dlg_perf_add #graph_name").hide();
-		}
-	});
-
-	var self = this;
-
-	$("#dlg_perf_add").dialog({
-		resizable: false,
-		modal: true,
-		width: "auto",
-		title: "Add a performance to a graph",
-		buttons: {
-			Ok: function () {
-				var graph_id = parseInt($("#dlg_perf_add #graph").val());
-				if (graph_id == -1) {
-					var name = $("#dlg_perf_add #graph_name input").val();
-					if (name == "") {
-						alert("You must specify a graph title");
-						return;
-					}
-					graph_id = self.addGraph({width: "100%", height: "200px", title: name });
-				}
-
-				var perf_val = perf_str.split(".");
-				var perf = {class: perf_val[0] };
-				if (perf_val.length == 2) {
-					perf.name = perf_val[1];
-				} else {
-					perf.instance = perf_val[1];
-					perf.name = perf_val[2];
-				}
-				self.addPerfToGraph(graph_id, perf);
-
-				$(this).dialog("close");
-			},
-			Cancel: function() {
-				$(this).dialog("close");
-			}
-		}
-	});
-
-}
-
 pomngUI.panel.perf.prototype.removeGraphDialog = function(graph_id) {
 
 	var graph = this.graphs[graph_id];

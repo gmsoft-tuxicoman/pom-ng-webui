@@ -24,6 +24,10 @@ pomngUI.panel.registry = function(elem) {
 		pomngUI.dialog.instanceAdd(self.selected_class, inst_name);
 	})
 
+	this.content.delegate("a#perf_add", "click", function(event) {
+		var perf_name = this.text;
+		pomngUI.dialog.perfAdd(self.selected_class, self.selected_instance, perf_name);
+	})
 	var clss_name = Object.keys(pomng.registry.classes);
 
 	var tree = this.tree.jstree(true);
@@ -187,7 +191,7 @@ pomngUI.panel.registry.prototype.classDetail = function(cls_name) {
 			var perf = cls.performances[perfs_name[i]];
 			html += '<tr><td>';
 			if (perf.type != "timeticks") {
-				html += '<a href="javascript:pomngUI.perf.addDialog(\'' + cls_name + '.' + perf.name + '\')">' + perf.name + '</a>';
+				html += '<a href="#" id="perf_add">' + perf.name + '</a>';
 			} else {
 				html += perf.name;
 			}
@@ -248,7 +252,7 @@ pomngUI.panel.registry.prototype.instanceDetail = function(cls_name, inst_name) 
 			var perf = inst.performances[perfs_name[i]];
 			html += '<tr><td>';
 			if (perf.type != "timeticks") {
-				html += '<a href="javascript:pomngUI.perf.addDialog(\'' + cls_name + '.' + inst.name + '.' + perf.name + '\')">' + perf.name + '</a>';
+				html += '<a href="#" id="perf_add">' + perf.name + '</a>';
 			} else {
 				html += perf.name;
 			}
