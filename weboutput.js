@@ -190,19 +190,86 @@ weboutput.wallofsheep.process_event = function(evt) {
 
 weboutput.images = function(elem) {
 	this.elem = elem;
-	this.elem.html('<h2>Output Images</h2><div id="content"></div>');
+	this.elem.html('<h2>Output Images</h2><div id="toolbar"></div><div id="content"></div>');
+
+	this.content = this.elem.find("#content");
+
+	this.content.delegate("img", "click", function() {
+		var pn = this.parentNode
+		$(pn).find("#details").toggle();
+	});
+
+	this.filter = "data.height >= 200 && data.width >= 200";
+
+	this.max_img = 20;
+	this.images = [];
 
 	pomng.monitor.ploadEventsListenStart();
-	this.ploadListen("data.height >= 300 && data.width >= 300", weboutput.images.process_pload);
+	this.ploadListen(this.filter, this.process_pload);
 
 }
 
-weboutput.images.process_pload = function (pload) {
-
-	var elem = this.elem.find("#content").append('<img src="/pload/' + pload.id + '"/>');
-
-}
 
 weboutput.images.description = "Show captured images.";
 weboutput.images.prototype = new weboutput();
 weboutput.images.prototype.constructor = weboutput.images;
+
+weboutput.images.prototype.parse_data = function(data) {
+
+	var i;
+	var html = "";
+
+	var keys = Object.keys(data).sort();
+
+	for (i = 0; i < keys.length; i++) {
+		var key = keys[i];
+		var item = data[key];
+		if ($.isArray(item)) {
+			// Array containing a list of data
+			html += key + ' : array (TODO)';
+		} else if ($.isPlainObject(item)) {
+			// It's a timestamp
+			html += key + ' : ' + pomngUI.timeval_toString(item);
+		} else {
+			html += key + ' : ' + pomng.htmlEscape(item);
+		}
+
+		html += '<br/>';
+
+	}
+
+	return html;
+}
+
+weboutput.images.prototype.process_pload = function(listener_id, pload) {
+
+	var html = '<div id="img_' + pload.id + '" class="ui-widget ui-widget-content"><img title="Click for details" class="weboutput_images_img" src="/pload/' + pload.id + '"/><div class="weboutput_images_content" id="details">';
+	
+	html += '<h4>Data :</h4><p>';
+
+	html += this.parse_data(pload.data);
+
+	html += '</p>';
+	
+	html += '<h4>Event :</h4><p>';
+
+	var evt = pload.rel_event;
+
+	html += this.parse_data(evt.data);
+
+	html += '</p>';
+
+	
+	html += '</div></div>';
+
+	this.content.append(html);
+	var elem = this.content.find('#img_' + pload.id);
+	this.images.push({listener: listener_id, pload: pload, elem: elem });
+
+	if (this.images.length > this.max_img) {
+		var img = this.images.shift();
+		img.elem.remove();
+		pomng.monitor.ploadDiscard(img.listener, img.pload.id);
+	}
+
+}

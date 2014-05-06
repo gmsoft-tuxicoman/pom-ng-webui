@@ -117,3 +117,7 @@ h4 {
 #logs_lvl_radio {
 	display: inline-block;
 }
+
+.weboutput_images_content {
+	display: inline-block;
+}

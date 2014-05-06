@@ -60,7 +60,7 @@ pomng.poll = function() {
 
 			var serial = response[0];
 
-			if (pomng.serials["registry"] > serial) {
+			if (serial === undefined || pomng.serials["registry"] > serial) {
 				// We need to reload everything since main serial decreased
 				// It means the program was restarted 
 				// Throw a connection error event
@@ -464,6 +464,12 @@ pomng.monitor.ploadListenerUnregister = function(id) {
 		}, [ pomng.monitor.sess_id, $.xmlrpc.force('i8', id) ]);
 }
 
+pomng.monitor.ploadDiscard = function(listener_id, pload_id) {
+	
+	pomng.call("monitor.ploadDiscard", null, [ pomng.monitor.sess_id, $.xmlrpc.force('i8', listener_id), $.xmlrpc.force('i8', pload_id) ]);
+
+}
+
 pomng.monitor.stop = function() {
 
 	if (Object.keys(pomng.monitor.evt_listeners).length == 0 &&
@@ -507,7 +513,7 @@ pomng.monitor.poll = function() {
 						continue;
 					var listener = pomng.monitor.pload_listeners[id];
 					if (listener.enabled)
-						listener.callback.call(listener.context, pload);
+						listener.callback.call(listener.context, id, pload);
 				}
 			}
 
