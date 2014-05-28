@@ -5,6 +5,15 @@ body {
 .icon-btn {
 	cursor: pointer;
 	display: inline-block;
+	border: 1px solid transparent;
+	border-radius: 4px;
+}
+.icon-btn:hover {
+	cursor: pointer;
+	display: inline-block;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	background-color: #999999;
 }
 
 h1 {
