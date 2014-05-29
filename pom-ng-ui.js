@@ -264,19 +264,19 @@ pomngUI.dialog.instanceParameter = function(cls_name, inst_name) {
 
 	var params_name = Object.keys(params).sort();
 
+	$("#dlg_inst_param tbody > tr").remove();
+
 	for (var i = 0; i < params_name.length; i++) {
 		if (params_name[i] == 'type' || params_name[i] == 'uid' || params_name[i] == 'running')
 			continue; // No need to display these params
 
 		var param = params[params_name[i]];
 
-		paramsHtml += '<tr><td>' + param.name + '</td><td>' + param.type + '</td><td><input id="val_' + param.name + '" type="text" value="' + param.value + '"/></td><td>' + param.description + '</td></tr>';
+		$("#dlg_inst_param tbody").append('<tr><td>' + param.name + '</td><td>' + param.type + '</td><td id="val_' + param.name + '"/></td><td>' + pomng.htmlEscape(param.description) + '</td></tr>');
+		$("#dlg_inst_param tbody #val_" + param.name).registryparam(param);
 
 	}
 		
-
-	$("#dlg_inst_param tbody").html(paramsHtml);
-
 	$("#dlg_inst_param").dialog({
 		resizable: false,
 		modal: true,
@@ -306,7 +306,8 @@ pomngUI.dialog.instanceParameterOK = function(cls_name, inst_name) {
 		if (params_name[i] == 'type' || params_name[i] == 'uid' || params_name[i] == 'running')
 			continue;
 
-		var value = $("#dlg_inst_param #val_" + params_name[i]).val();
+		var widget = $("#dlg_inst_param #val_" + params_name[i]);
+		var value = widget.registryparam("getval");
 		if (value != params[params_name[i]].value)
 			pomng.registry.setInstanceParam(cls_name, inst_name, params_name[i], value);
 	}
