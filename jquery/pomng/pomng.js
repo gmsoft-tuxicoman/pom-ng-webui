@@ -11,6 +11,7 @@ $.widget("pomng.registryparam", {
 	_create: function() {
 		var type = this.options.type;
 		var name = 'param_' + this.options.name;
+		var unit = this.options.unit;
 		if (type == "bool") {
 			this.element.html('<div id="radio" class="pomng_bool_btn"><input type="radio" id="yes" name="' + name + '" /><label for="yes">Yes</label><input type="radio" id="no" name="' + name + '" /><label for="no">No</label></div>');
 			var radio = this.element.find("#radio").buttonset();
@@ -38,6 +39,10 @@ $.widget("pomng.registryparam", {
 
 		} else {
 			this.element.html('<input type="text" name="' + name + '" value="' + pomng.htmlEscape(this.options.value) + '" class="ui-widget ui-widget-content ui-state-focus ui-corner-all" />');
+		}
+
+		if (unit) {
+			this.element.append('&nbsp;' + pomng.htmlEscape(unit));
 		}
 	},
 
