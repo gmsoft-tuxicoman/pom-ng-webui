@@ -84,8 +84,7 @@ pomngUI.main.addPanel = function(name, title) {
 	this.elem.append('<div id="' + name + '"><p>' + title + ' content</p></div>');
 	this.elem.tabs("refresh").tabs("option", "active", 0);
 
-	elem = this.elem.find("#" + name);
-	return elem;
+	return this.elem.find("#" + name);
 }
 
 pomngUI.main.removePanel = function(id) {
