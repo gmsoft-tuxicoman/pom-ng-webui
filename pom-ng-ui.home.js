@@ -16,6 +16,50 @@ pomngUI.panel.home = function(elem) {
 	window.addEventListener("pomng.registry.instance.update", this.evtUpdateInstance.bind(this));
 	window.addEventListener("pomng.registry.instance.remove", this.evtRemoveInstance.bind(this));
 	window.addEventListener("pomng.registry.config.update", this.evtConfigUpdate.bind(this));
+
+	this.elem.delegate("#inst_start", "click", function() {
+		var inst_name = this.parentElement.parentElement.id.substring(3);
+		var cls_name = this.parentElement.parentElement.parentElement.parentElement.id.substring(4);
+
+		pomng.registry.setInstanceParam(cls_name, inst_name, "running", "yes");
+	});
+
+	this.elem.delegate("#inst_stop", "click", function() {
+		var inst_name = this.parentElement.parentElement.id.substring(3);
+		var cls_name = this.parentElement.parentElement.parentElement.parentElement.id.substring(4);
+
+		pomng.registry.setInstanceParam(cls_name, inst_name, "running", "no");
+	});
+
+	this.elem.delegate("#inst_param", "click", function() {
+		var inst_name = this.parentElement.parentElement.id.substring(3);
+		var cls_name = this.parentElement.parentElement.parentElement.parentElement.id.substring(4);
+
+		pomngUI.dialog.instanceParameter(cls_name, inst_name);
+	});
+
+	this.elem.delegate("#inst_rm", "click", function() {
+		var inst_name = this.parentElement.parentElement.id.substring(3);
+		var cls_name = this.parentElement.parentElement.parentElement.parentElement.id.substring(4);
+
+		pomngUI.dialog.instanceRemove(cls_name, inst_name);
+	});
+
+	this.elem.delegate("#cfg_load", "click", function() {
+		var cfg_name = $(this.parentElement.parentElement).find("#cfg_name").text();
+		pomngUI.dialog.configOpen(cfg_name);
+
+	});
+
+	this.elem.delegate("#cfg_save", "click", function() {
+		var cfg_name = $(this.parentElement.parentElement).find("#cfg_name").text();
+		pomngUI.dialog.configOverwrite(cfg_name);
+	});
+
+	this.elem.delegate("#cfg_rm", "click", function() {
+		var cfg_name = $(this.parentElement.parentElement).find("#cfg_name").text();
+		pomngUI.dialog.configDelete(cfg_name);
+	});
 }
 
 pomngUI.panel.home.prototype = new pomngUI.panel();
@@ -44,16 +88,16 @@ pomngUI.panel.home.prototype.evtUpdateInstance = function(event) {
 
 	// Start/Stop icon
 	if (running)
-		html += '<span class="ui-icon ui-icon-stop icon-btn" title="Stop" onclick="pomng.registry.setInstanceParam(\'' + cls + '\', \'' + instance.name + '\', \'running\', \'no\')"/>';
+		html += '<span class="ui-icon ui-icon-stop icon-btn" id="inst_stop"/>';
 	else
-		html += '<span class="ui-icon ui-icon-play icon-btn" title="Start" onclick="pomng.registry.setInstanceParam(\'' + cls + '\', \'' + instance.name + '\', \'running\', \'yes\')"/>';
+		html += '<span class="ui-icon ui-icon-play icon-btn" id="inst_start"/>';
 	
 	// Parameter icon
-	html += '<span class="ui-icon ui-icon-gear icon-btn" title="Parameters" onclick="pomngUI.dialog.instanceParameter(\'' + cls + '\', \'' + instance.name + '\')"/>';
+	html += '<span class="ui-icon ui-icon-gear icon-btn" title="Parameters" id="inst_param"/>';
 
 	
 	// Remove icon
-	html += '<span class="ui-icon ui-icon-close icon-btn" title="Remove" onclick="pomngUI.dialog.instanceRemove(\'' + cls + '\', \'' + instance.name + '\')"/>';
+	html += '<span class="ui-icon ui-icon-close icon-btn" title="Remove" id="inst_rm"/>';
 	
 	html += '</td>';
 
@@ -61,12 +105,10 @@ pomngUI.panel.home.prototype.evtUpdateInstance = function(event) {
 	if (tr.length > 0) {
 		// Update existing
 		tr.html(html);
-		console.log("pomUI.summary: Updated existing instance " + cls + " " + instance.name);
 	} else {
 		// Add new
 		html = '<tr id="tr_' + event.detail.instance_name + '">' + html + '</tr>';
 		tbl.append(html);
-		console.log("pomUI.summary: Added new instance " + cls + " " + instance.name);
 	}
 
 }
@@ -79,8 +121,6 @@ pomngUI.panel.home.prototype.evtRemoveInstance = function(event) {
 	var elem = this.elem.find("#tbl_" + cls + " tbody #tr_" + inst);
 
 	elem.remove();
-
-	console.log("pomUI.summary: Removed instance " + cls + " " + inst);
 
 }
 
@@ -97,10 +137,10 @@ pomngUI.panel.home.prototype.evtConfigUpdate = function(event) {
 
 		var config = configs[configs_name[i]];
 		var config_name = pomng.htmlEscape(config.name);
-		html += '<tr><td>' + config_name + '</td><td>' + config.timestamp + '</td><td>';
-		html += '<span class="ui-icon ui-icon-folder-open icon-btn" title="Open configuration" onclick="pomngUI.dialog.configOpen(\'' + config_name + '\')"/>';
-		html += '<span class="ui-icon ui-icon-disk icon-btn" title="Save configuration" onclick="pomngUI.dialog.configOverwrite(\'' + config_name + '\')"/>';
-		html += '<span class="ui-icon ui-icon-trash icon-btn" title="Delete configuration" onclick="pomngUI.dialog.configDelete(\'' + config_name + '\')"/>';
+		html += '<tr><td id="cfg_name">' + config_name + '</td><td>' + config.timestamp + '</td><td>';
+		html += '<span class="ui-icon ui-icon-folder-open icon-btn" title="Open configuration" id="cfg_load"/>';
+		html += '<span class="ui-icon ui-icon-disk icon-btn" title="Save configuration" id="cfg_save"/>';
+		html += '<span class="ui-icon ui-icon-trash icon-btn" title="Delete configuration" id="cfg_rm"/>';
 		html += '</td></tr>';
 	}
 
