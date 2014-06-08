@@ -203,7 +203,7 @@ pomngUI.dialog.evtUpdateInstance = function(event) {
 		if (pomngUI.dialog.config_list[i].cls == event.detail.cls_name &&
 			pomngUI.dialog.config_list[i].instance == event.detail.instance_name) {
 			pomngUI.dialog.config_list.splice(i, 1);
-			pomngUI.dialog.instanceParameter(event.detail.cls_name, event.detail.instance_name);
+			pomngUI.dialog.registryParameter(event.detail.cls_name, event.detail.instance_name);
 			break;
 		}
 	}
@@ -255,15 +255,21 @@ pomngUI.dialog.instanceAdd = function(cls_name, inst_type) {
 
 }
 
-pomngUI.dialog.instanceParameter = function(cls_name, inst_name) {
+pomngUI.dialog.registryParameter = function(cls_name, inst_name) {
 
-	var params = pomng.registry.classes[cls_name].instances[inst_name].parameters;
+	var params;
+
+	if (inst_name) {
+		params = pomng.registry.classes[cls_name].instances[inst_name].parameters;
+	} else {
+		params = pomng.registry.classes[cls_name].parameters;
+	}
 
 	var paramsHtml = "";
 
 	var params_name = Object.keys(params).sort();
 
-	$("#dlg_inst_param tbody > tr").remove();
+	$("#dlg_reg_param tbody > tr").remove();
 
 	for (var i = 0; i < params_name.length; i++) {
 		if (params_name[i] == 'type' || params_name[i] == 'uid' || params_name[i] == 'running')
@@ -271,12 +277,12 @@ pomngUI.dialog.instanceParameter = function(cls_name, inst_name) {
 
 		var param = params[params_name[i]];
 
-		$("#dlg_inst_param tbody").append('<tr><td>' + param.name + '</td><td>' + param.type + '</td><td id="val_' + param.name + '"/></td><td>' + pomng.htmlEscape(param.description) + '</td></tr>');
-		$("#dlg_inst_param tbody #val_" + param.name).registryparam(param);
+		$("#dlg_reg_param tbody").append('<tr><td>' + param.name + '</td><td>' + param.type + '</td><td id="val_' + param.name + '"/></td><td>' + pomng.htmlEscape(param.description) + '</td></tr>');
+		$("#dlg_reg_param tbody #val_" + param.name).registryparam(param);
 
 	}
 		
-	$("#dlg_inst_param").dialog({
+	$("#dlg_reg_param").dialog({
 		resizable: false,
 		modal: true,
 		width: "auto",
@@ -284,7 +290,7 @@ pomngUI.dialog.instanceParameter = function(cls_name, inst_name) {
 
 		buttons: {
 			OK: function() {
-				pomngUI.dialog.instanceParameterOK(cls_name, inst_name)
+				pomngUI.dialog.registryParameterOK(cls_name, inst_name)
 					$(this).dialog("close");
 			},
 			Cancel: function() {
@@ -294,7 +300,7 @@ pomngUI.dialog.instanceParameter = function(cls_name, inst_name) {
 	});
 }
 
-pomngUI.dialog.instanceParameterOK = function(cls_name, inst_name) {
+pomngUI.dialog.registryParameterOK = function(cls_name, inst_name) {
 
 
 	var params = pomng.registry.classes[cls_name].instances[inst_name].parameters;
@@ -305,7 +311,7 @@ pomngUI.dialog.instanceParameterOK = function(cls_name, inst_name) {
 		if (params_name[i] == 'type' || params_name[i] == 'uid' || params_name[i] == 'running')
 			continue;
 
-		var widget = $("#dlg_inst_param #val_" + params_name[i]);
+		var widget = $("#dlg_reg_param #val_" + params_name[i]);
 		var value = widget.registryparam("getval");
 		if (value != params[params_name[i]].value)
 			pomng.registry.setInstanceParam(cls_name, inst_name, params_name[i], value);

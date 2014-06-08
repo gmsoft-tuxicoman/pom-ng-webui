@@ -35,7 +35,7 @@ pomngUI.panel.home = function(elem) {
 		var inst_name = this.parentElement.parentElement.id.substring(3);
 		var cls_name = this.parentElement.parentElement.parentElement.parentElement.id.substring(4);
 
-		pomngUI.dialog.instanceParameter(cls_name, inst_name);
+		pomngUI.dialog.registryParameter(cls_name, inst_name);
 	});
 
 	this.elem.delegate("#inst_rm", "click", function() {
