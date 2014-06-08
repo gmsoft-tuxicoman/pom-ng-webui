@@ -94,6 +94,7 @@ pomngUI.panel.registry.prototype.classDetail = function(cls_name) {
 	html += '<h3 class="registry_details">Parameters :</h3>';
 
 	if (params_name.length > 0) {
+		html += '<span class="ui-icon ui-icon-gear icon-btn" id="btn_cls_param" title="Parameters"></span></div>';
 		html += '<table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Value</td><td>Type</td><td>Description</td></tr></thead><tbody>';
 		for (var i = 0; i < params_name.length; i++) {
 			var param = cls.parameters[params_name[i]];
@@ -102,7 +103,7 @@ pomngUI.panel.registry.prototype.classDetail = function(cls_name) {
 
 		html += '</tbody></table>';
 
-		} else {
+	} else {
 		html += '<div>No parameter for this class</div>';
 	}
 
@@ -210,6 +211,10 @@ pomngUI.panel.registry.prototype.classDetail = function(cls_name) {
 		self.refreshPerf(cls.name)
 	});
 
+	this.content.find("#btn_cls_param").click(function() {
+		pomngUI.dialog.registryParameter(cls_name);
+	});
+
 	pomng.call("registry.getPerfs", this.updatePerf, [ perfs_to_fetch ], this);
 }
 
@@ -224,6 +229,7 @@ pomngUI.panel.registry.prototype.instanceDetail = function(cls_name, inst_name) 
 	html += '<h3 class="registry_details">Parameters :</h3>';
 
 	if (params_name.length > 0) {
+		html += '<span class="ui-icon ui-icon-gear icon-btn" id="btn_inst_param" title="Parameters"></span></div>';
 		html += '<table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Name</td><td>Value</td><td>Type</td><td>Description</td></tr></thead><tbody>';
 		for (var i = 0; i < params_name.length; i++) {
 			var param = inst.parameters[params_name[i]];
@@ -269,6 +275,10 @@ pomngUI.panel.registry.prototype.instanceDetail = function(cls_name, inst_name) 
 	var self = this;
 	this.content.find("#btn_perf_refresh").click(function() {
 		self.refreshPerf(cls_name, inst_name)
+	});
+
+	this.content.find("#btn_inst_param").click(function() {
+		pomngUI.dialog.registryParameter(cls_name, inst_name);
 	});
 
 	pomng.call("registry.getPerfs", this.updatePerf, [ perfs_to_fetch ], this);
