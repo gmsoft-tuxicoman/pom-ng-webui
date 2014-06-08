@@ -13,10 +13,10 @@ $.widget("pomng.registryparam", {
 		var name = 'param_' + this.options.name;
 		var unit = this.options.unit;
 		if (type == "bool") {
-			this.element.html('<div id="radio" class="pomng_bool_btn"><input type="radio" id="yes" name="' + name + '" /><label for="yes">Yes</label><input type="radio" id="no" name="' + name + '" /><label for="no">No</label></div>');
+			this.element.html('<div id="radio" class="pomng_bool_btn"><input type="radio" id="yes_' + name + '" name="' + name + '" /><label for="yes_' + name + '">Yes</label><input type="radio" id="no_' + name + '" name="' + name + '" /><label for="no_' + name + '">No</label></div>');
 			var radio = this.element.find("#radio").buttonset();
 			
-			var btn = this.element.find('#' + this.options.value)
+			var btn = radio.find('#' + this.options.value + '_' + name);
 			btn.prop("checked", true);
 
 			radio.buttonset("refresh");
@@ -49,7 +49,11 @@ $.widget("pomng.registryparam", {
 	getval: function() {
 		var type = this.options.type;
 		if (type == "bool") {
-			return this.element.find(":radio:checked").attr('id');
+			var id = this.element.find(":radio:checked").attr('id');
+			if (id.substr(0,2) == "no") {
+				return "no";
+			}
+			return "yes";
 		} else if (this.options.info && this.options.info.values) {
 			return this.element.find("select").val();
 		} else {
