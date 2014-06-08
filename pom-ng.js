@@ -165,6 +165,10 @@ pomng.registry.setInstanceParam = function(cls_name, instance_name, param_name, 
 	pomng.call("registry.setInstanceParam", null, [ cls_name, instance_name, param_name, param_value ]);
 }
 
+pomng.registry.setClassParam = function(cls_name, param_name, param_value) {
+	pomng.call("registry.setClassParam", null, [ cls_name, param_name, param_value ]);
+}
+
 pomng.registry.removeInstance = function(cls_name, instance_name) {
 	pomng.call("registry.removeInstance", null, [ cls_name, instance_name ]);
 }
