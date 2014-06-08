@@ -258,11 +258,14 @@ pomngUI.dialog.instanceAdd = function(cls_name, inst_type) {
 pomngUI.dialog.registryParameter = function(cls_name, inst_name) {
 
 	var params;
+	var title;
 
 	if (inst_name) {
 		params = pomng.registry.classes[cls_name].instances[inst_name].parameters;
+		title = "Parameters of " + cls_name + " " + inst_name;
 	} else {
 		params = pomng.registry.classes[cls_name].parameters;
+		title = "Global parameters for " + cls_name;
 	}
 
 	var paramsHtml = "";
@@ -281,12 +284,13 @@ pomngUI.dialog.registryParameter = function(cls_name, inst_name) {
 		$("#dlg_reg_param tbody #val_" + param.name).registryparam(param);
 
 	}
+
 		
 	$("#dlg_reg_param").dialog({
 		resizable: false,
 		modal: true,
 		width: "auto",
-		title: "Parameters of " + cls_name + " " + inst_name,
+		title: title,
 
 		buttons: {
 			OK: function() {
@@ -303,7 +307,13 @@ pomngUI.dialog.registryParameter = function(cls_name, inst_name) {
 pomngUI.dialog.registryParameterOK = function(cls_name, inst_name) {
 
 
-	var params = pomng.registry.classes[cls_name].instances[inst_name].parameters;
+	var params;
+
+	if (inst_name) {
+		params = pomng.registry.classes[cls_name].instances[inst_name].parameters;
+	} else {
+		params = pomng.registry.classes[cls_name].parameters;
+	}
 
 	var params_name = Object.keys(params).sort();
 
@@ -313,8 +323,13 @@ pomngUI.dialog.registryParameterOK = function(cls_name, inst_name) {
 
 		var widget = $("#dlg_reg_param #val_" + params_name[i]);
 		var value = widget.registryparam("getval");
-		if (value != params[params_name[i]].value)
-			pomng.registry.setInstanceParam(cls_name, inst_name, params_name[i], value);
+		if (value != params[params_name[i]].value) {
+			if (inst_name) {
+				pomng.registry.setInstanceParam(cls_name, inst_name, params_name[i], value);
+			} else {
+				pomng.registry.setClassParam(cls_name, params_name[i], value);
+			}
+		}
 	}
 }
 
