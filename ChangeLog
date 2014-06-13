@@ -1,2 +1,7 @@
+v0.0.2
+	Improve parameters handling.
+	Allow to change parameters from the registry tab.
+	Improve button visibility.
+
 v0.0.1
 	First release.
