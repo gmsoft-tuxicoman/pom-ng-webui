@@ -78,6 +78,10 @@ weboutput.arpwatch.process_event = function(evt) {
 	var ip = data['ip_addr'];
 	var id = 'sta_' + ip.replace(/\./g, '_');
 
+	var vlan = "none";
+	if (vlan in data)
+		vlan = data['vlan'];
+
 	if (evt.event == "arp_new_sta") {
 
 		if (this.sta[ip] !== undefined)
@@ -86,9 +90,6 @@ weboutput.arpwatch.process_event = function(evt) {
 		// Found a new station, add it to our list
 		this.sta[ip] = data;
 
-		var vlan = "none";
-		if (vlan in data)
-			vlan = data['vlan'];
 
 
 		this.elem.find('tbody').append('<tr id="' + id + '"><td>' + ip + '</td><td>' + data['mac_addr'] + '</td><td>' + vlan + '</td><td>' + pomngUI.timeval_toString(evt.timestamp) + '</td></tr>');
