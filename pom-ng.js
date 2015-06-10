@@ -342,36 +342,43 @@ pomng.monitor.eventListenerRegisterPending = function() {
 
 	if (!listener)
 		return;
+
 	pomng.call("monitor.eventAddListener",
 	
 		function(response, status, jqXHR) {
 			var id = response[0];
-			pomng.monitor.evt_listeners[id] = { evt: listener.evt, callback: listener.callback, context: listener.context, enabled: true };
+			pomng.monitor.evt_listeners[id] = { evt: listener.evt, callbackBegin: listener.callbackBegin, callbackEnd: listener.callbackEnd, context: listener.context, enabled: true };
 			listener.idCallback.call(listener.context, id);
 
 			pomng.monitor.eventListenerRegisterPending();
 		},
 		
-		[ pomng.monitor.sess_id, listener.evt, listener.filter ]);
+		[ pomng.monitor.sess_id, listener.evt, listener.filter, listener.begin, listener.end ]);
 
 }
 
-pomng.monitor.eventListenerRegister = function(evt, filter, callback, context, idCallback) {
+pomng.monitor.eventListenerRegister = function(evt, filter, callbackBegin, callbackEnd, context, idCallback) {
 
 	if (typeof filter != "string")
 		filter = "";
 
+	begin = false;
+	if (callbackBegin)
+		begin = true;
+	end = false;
+	if (callbackEnd)
+		end = true;
 	
 	if (pomng.monitor.sess_id >= 0) {
 		pomng.call("monitor.eventAddListener", function(response, status, jqXHR) {
 				var id = response[0];
-				pomng.monitor.evt_listeners[id] = { evt: evt, callback: callback, context: context, idCallback: idCallback, enabled: true };
+				pomng.monitor.evt_listeners[id] = { evt: evt, callbackBegin: callbackBegin, callbackEnd: callbackEnd, context: context, idCallback: idCallback, enabled: true };
 				idCallback.call(context, id);
-			}, [ pomng.monitor.sess_id, evt, filter ]);
+			}, [ pomng.monitor.sess_id, evt, filter, begin, end ]);
 	} else {
 
 		// Add the listener to the pending list
-		pomng.monitor.evt_listeners_pending.push({evt: evt, filter: filter, callback: callback, context: context, idCallback: idCallback });
+		pomng.monitor.evt_listeners_pending.push({evt: evt, filter: filter, callbackBegin: callbackBegin, callbackEnd: callbackEnd, context: context, idCallback: idCallback, begin: begin, end: end });
 
 		pomng.monitor.start();
 	}
@@ -501,8 +508,12 @@ pomng.monitor.poll = function() {
 						// Listener not found
 						continue;
 					var listener = pomng.monitor.evt_listeners[id];
-					if (listener.enabled)
-						listener.callback.call(listener.context, evt);
+					if (listener.enabled) {
+						if (!evt['done'])
+							listener.callbackBegin.call(listener.context, evt);
+						else
+							listener.callbackEnd.call(listener.context, evt);
+					}
 				}
 			}
 

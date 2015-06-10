@@ -8,8 +8,8 @@ function weboutput() {
 	this.pload_listeners = [];
 }
 
-weboutput.prototype.eventListen = function (evtName, filter, callback) {
-	pomng.monitor.eventListenerRegister(evtName, filter, callback, this, this.eventListenCallback);
+weboutput.prototype.eventListen = function (evtName, filter, callbackBegin, callbackEnd) {
+	pomng.monitor.eventListenerRegister(evtName, filter, callbackBegin, callbackEnd, this, this.eventListenCallback);
 }
 
 weboutput.prototype.eventListenCallback = function(id) {
@@ -63,8 +63,8 @@ weboutput.arpwatch = function(elem) {
 	this.elem.html('<h2>Output arpwatch</h2><table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>IP address</td><td>Mac address</td><td>Vlan</td><td>Last change</td></tr></thead><tbody></tbody></table>');
 	this.sta = {};
 
-	this.eventListen("arp_new_sta", null, weboutput.arpwatch.process_event);
-	this.eventListen("arp_sta_changed", null, weboutput.arpwatch.process_event);
+	this.eventListen("arp_new_sta", null, null, weboutput.arpwatch.process_event);
+	this.eventListen("arp_sta_changed", null, null, weboutput.arpwatch.process_event);
 }
 
 weboutput.arpwatch.description = "Show discovered stations.";
@@ -113,9 +113,9 @@ weboutput.wallofsheep = function(elem) {
 	this.elem = elem;
 	this.elem.html('<h2>Output Wall Of Sheep</h2><table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Protocol</td><td>Client</td><td>Server</td><td>Username</td><td>Password</td><td>Details</td><td>Timestamp</td></td></tr></thead><tbody></tbody></table>');
 
-	this.eventListen("http_request", "data.username && data.password", weboutput.wallofsheep.process_event);
-	this.eventListen("smtp_auth", "data.params[username] && data.params[password]", weboutput.wallofsheep.process_event);
-	this.eventListen("ppp_pap_auth", null, weboutput.wallofsheep.process_event);
+	this.eventListen("http_request", "data.username && data.password", null, weboutput.wallofsheep.process_event);
+	this.eventListen("smtp_auth", "data.params[username] && data.params[password]", null, weboutput.wallofsheep.process_event);
+	this.eventListen("ppp_pap_auth", null, null, weboutput.wallofsheep.process_event);
 }
 
 
