@@ -52,7 +52,7 @@ weboutput.prototype.cleanup = function() {
 
 }
 
-weboutput.outputs = [ 'arpwatch', 'wallofsheep', 'images' ];
+weboutput.outputs = [ 'arpwatch', 'wallofsheep', 'images', 'calls' ];
 
 //
 // ARPWATCH
@@ -274,3 +274,48 @@ weboutput.images.prototype.process_pload = function(listener_id, pload) {
 	}
 
 }
+
+//
+// CALLS
+//
+
+weboutput.calls = function(elem) {
+	this.elem = elem;
+	this.elem.html('<h2>Output calls</h2><table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Timestamp</td><td>From Name</td><td>Fom URI</td><td>To Name</td><td>To URI</td><td>Call-ID</td><td>Complete</td></tr></thead><tbody></tbody></table>');
+	this.sta = {};
+
+	this.eventListen("sip_call", null, weboutput.calls.process_event, weboutput.calls.process_event);
+}
+
+weboutput.calls.description = "Show VOIP calls.";
+weboutput.calls.prototype = new weboutput();
+weboutput.calls.prototype.constructor = weboutput.calls;
+
+
+weboutput.calls.process_event = function(evt) {
+
+	var data = evt.data;
+
+	var from = pomng.htmlEscape(data['from_display']);
+	var from_uri = pomng.htmlEscape(data['from_uri']);
+	var to = pomng.htmlEscape(data['to_display']);
+	var to_uri = pomng.htmlEscape(data['to_uri']);
+	var call_id = pomng.htmlEscape(data['call_id']);
+
+	var id = 'call_' + call_id.replace(/[\.:@]/g, '_');
+
+
+	if (!evt.done) {
+		this.elem.find('tbody').append('<tr id="' + id + '"><td>' + pomngUI.timeval_toString(evt.timestamp) + '</td><td>' + from + '</td><td>' + from_uri + '</td><td>' + to + '</td><td>' + to_uri + '</td><td>' + call_id + '</td><td id="complete">No</td></tr>');
+
+	} else {
+		var elem = $('#' + id + " #complete");
+		if (!elem.length) {
+			this.elem.find('tbody').append('<tr id="' + id + '"><td>' + pomngUI.timeval_toString(evt.timestamp) + '</td><td>' + from + '</td><td>' + from_uri + '</td><td>' + to + '</td><td>' + to_uri + '</td><td>' + call_id + '</td><td id="complete">Yes</td></tr>');
+		} else {
+			elem.text("Yes");
+		}
+	}
+
+}
+
