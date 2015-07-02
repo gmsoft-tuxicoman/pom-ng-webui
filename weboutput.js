@@ -29,6 +29,10 @@ weboutput.prototype.ploadEventsListen = function (id) {
 	pomng.monitor.ploadEventsListenStart();
 }
 
+weboutput.prototype.mediaPloadToContainer = function(listener_id, pload_id, format, callback) {
+	pomng.monitor.mediaPloadToContainer(listener_id, pload_id, format, callback, this);
+}
+
 weboutput.prototype.activate = pomngUI.panel.prototype.activate;
 weboutput.prototype.deactivate = pomngUI.panel.prototype.deactivate;
 
@@ -281,10 +285,12 @@ weboutput.images.prototype.process_pload = function(listener_id, pload) {
 
 weboutput.calls = function(elem) {
 	this.elem = elem;
-	this.elem.html('<h2>Output calls</h2><table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Timestamp</td><td>From Name</td><td>Fom URI</td><td>To Name</td><td>To URI</td><td>Call-ID</td><td>Complete</td></tr></thead><tbody></tbody></table>');
+	this.elem.html('<h2>Output calls</h2><table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Timestamp</td><td>From Name</td><td>Fom URI</td><td>To Name</td><td>To URI</td><td>Call-ID</td><td>Complete</td></tr></thead><tbody id="calls"></tbody></table><table class="ui-widget ui-widget-content ui-table"><thead><tr class="ui-widget-header"><td>Streams</td></tr></thead><tbody id="streams"></tbody>');
 	this.sta = {};
 
-	this.eventListen("sip_call", null, weboutput.calls.process_event, weboutput.calls.process_event);
+	this.eventListen("sip_call", null, weboutput.calls.process_event_sip_call, weboutput.calls.process_event_sip_call);
+	this.eventListen("rtp_stream", null, weboutput.calls.process_event_rtp_stream, weboutput.calls.process_event_rtp_stream);
+	this.ploadListen("evt.name == rtp_stream", this.process_pload);
 }
 
 weboutput.calls.description = "Show VOIP calls.";
@@ -292,7 +298,7 @@ weboutput.calls.prototype = new weboutput();
 weboutput.calls.prototype.constructor = weboutput.calls;
 
 
-weboutput.calls.process_event = function(evt) {
+weboutput.calls.process_event_sip_call = function(evt) {
 
 	var data = evt.data;
 
@@ -306,7 +312,7 @@ weboutput.calls.process_event = function(evt) {
 
 
 	if (!evt.done) {
-		this.elem.find('tbody').append('<tr id="' + id + '"><td>' + pomngUI.timeval_toString(evt.timestamp) + '</td><td>' + from + '</td><td>' + from_uri + '</td><td>' + to + '</td><td>' + to_uri + '</td><td>' + call_id + '</td><td id="complete">No</td></tr>');
+		this.elem.find('#calls').append('<tr id="' + id + '"><td>' + pomngUI.timeval_toString(evt.timestamp) + '</td><td>' + from + '</td><td>' + from_uri + '</td><td>' + to + '</td><td>' + to_uri + '</td><td>' + call_id + '</td><td id="complete">No</td></tr>');
 
 	} else {
 		var elem = $('#' + id + " #complete");
@@ -319,3 +325,14 @@ weboutput.calls.process_event = function(evt) {
 
 }
 
+weboutput.calls.process_event_rtp_stream = function(evt) {
+}
+
+weboutput.calls.prototype.process_pload = function(listener_id, pload) {
+
+	this.mediaPloadToContainer(listener_id, pload.id, "wav", this.process_media);
+}
+
+weboutput.calls.prototype.process_media = function(listener_id, pload) {
+	this.elem.find('#streams').append('<tr><td><audio controls> <source src="/pload/' + pload.id + '" type="audio/wav"/></audio></td></tr>');
+}

@@ -481,6 +481,15 @@ pomng.monitor.ploadDiscard = function(listener_id, pload_id) {
 
 }
 
+pomng.monitor.mediaPloadToContainer = function(listener_id, pload_id, format, callback, context) {
+	pomng.call("monitor.mediaPloadToContainer",
+		function (response, status, jqXHR) {
+			var pload = response[0];
+			callback.call(context, listener_id, pload);
+
+		}, [ pomng.monitor.sess_id, $.xmlrpc.force('i8', listener_id), $.xmlrpc.force('i8', pload_id), format ]);
+}
+
 pomng.monitor.stop = function() {
 
 	if (Object.keys(pomng.monitor.evt_listeners).length == 0 &&
