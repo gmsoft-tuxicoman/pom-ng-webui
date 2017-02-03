@@ -194,9 +194,9 @@ pomng.registry.update = function() {
 
 				var classes = rsp["classes"];
 
-				for (var i = 0; i < classes.length; i++) {
+				for (var cls_name in classes) {
 
-					var cls = classes[i];
+					var cls = classes[cls_name];
 
 					if (pomng.registry.classes[cls.name] === undefined) {
 						pomng.registry.classes[cls.name] = {};
@@ -213,8 +213,8 @@ pomng.registry.update = function() {
 					// Keep trace of all the instances we know about
 					var old_instances = Object.keys(pomng.registry.classes[cls.name].instances);
 
-					for (var j = 0; j < cls.instances.length; j++) {
-						var instance = cls.instances[j];
+					for (var inst_name in cls.instances) {
+						var instance = cls.instances[inst_name];
 						if (pomng.registry.classes[cls.name].instances[instance.name] === undefined ||
 							pomng.registry.classes[cls.name].instances[instance.name].serial != instance.serial) {
 
