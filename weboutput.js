@@ -245,6 +245,9 @@ weboutput.images.prototype.parse_data = function(data) {
 weboutput.images.prototype.process_pload = function(listener_id, pload) {
 
 	var html = '<div id="img_' + pload.id + '" class="ui-widget ui-widget-content"><img title="Click for details" class="weboutput_images_img" src="/pload/' + pload.id + '"/><div class="weboutput_images_content" id="details">';
+
+	if (pload.filename)
+		html += '<h4>Filename : ' + pload.filename + '</h4><p>';
 	
 	html += '<h4>Data :</h4><p>';
 
