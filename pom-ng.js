@@ -132,7 +132,6 @@ pomng.registry.updateInstance = function(cls, instance_name) {
 
 pomng.registry.updateInstanceCB = function(cls, instance) {
 
-	instance.parameters = pomng.registry.nameMap(instance.parameters);
 	instance.performances = pomng.registry.nameMap(instance.performances);
 	pomng.registry.classes[cls].instances[instance.name] = instance;
 
@@ -230,7 +229,7 @@ pomng.registry.update = function() {
 					}
 
 					pomng.registry.classes[cls.name].available_types = pomng.registry.nameMap(cls.available_types);
-					pomng.registry.classes[cls.name].parameters = pomng.registry.nameMap(cls.parameters);
+					pomng.registry.classes[cls.name].parameters = cls.parameters;
 					pomng.registry.classes[cls.name].performances = pomng.registry.nameMap(cls.performances);
 					pomng.registry.classes[cls.name].serial = cls.serial;
 
