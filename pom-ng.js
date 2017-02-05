@@ -132,7 +132,6 @@ pomng.registry.updateInstance = function(cls, instance_name) {
 
 pomng.registry.updateInstanceCB = function(cls, instance) {
 
-	instance.performances = pomng.registry.nameMap(instance.performances);
 	pomng.registry.classes[cls].instances[instance.name] = instance;
 
 	var event = new CustomEvent("pomng.registry.instance.update", { detail: { cls_name: cls, instance_name: instance.name }});
@@ -230,7 +229,7 @@ pomng.registry.update = function() {
 
 					pomng.registry.classes[cls.name].available_types = pomng.registry.nameMap(cls.available_types);
 					pomng.registry.classes[cls.name].parameters = cls.parameters;
-					pomng.registry.classes[cls.name].performances = pomng.registry.nameMap(cls.performances);
+					pomng.registry.classes[cls.name].performances = cls.performances;
 					pomng.registry.classes[cls.name].serial = cls.serial;
 
 					// Send a delete item for all the intances that were not present in this update
