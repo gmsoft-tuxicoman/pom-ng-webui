@@ -180,7 +180,7 @@ pomng.registry.update = function() {
 
 			if (pomng.serials["configs"] != rsp.configs_serial) {
 				// Update the config list
-				pomng.registry.configs = pomng.registry.nameMap(rsp["configs"]);
+				pomng.registry.configs = rsp["configs"];
 				pomng.serials["configs"] = rsp.configs_serial;
 				
 				var event = new Event("pomng.registry.config.update");
