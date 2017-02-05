@@ -171,9 +171,9 @@ pomngUI.panel.perf.prototype.updatePerf = function(response, status, jqXHR) {
 	var perfs = response[0];
 
 	// Add the value for each perf
-	for (var i = 0; i < perfs.length; i++) {
+	for (var perf_name in perfs) {
 
-		var perf = perfs[i]
+		var perf = perfs[perf_name]
 		var perf_id;
 		var perf_type;
 		if (perf.instance === undefined) {
