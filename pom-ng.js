@@ -109,21 +109,6 @@ pomng.poll_error = function(jqXHR, status, error) {
  * Registry related functions
  */
 pomng.registry = {};
-pomng.registry.nameMap = function(lst, key_str) {
-
-	if (lst === undefined)
-		return [];
-	
-	key_str = key_str || "name";
-
-	var res = {};
-	for (var i = 0; i < lst.length; i++) {
-		var item = lst[i];
-		res[item[key_str]] = item;
-	}
-
-	return res;
-}
 
 pomng.registry.updateInstance = function(cls, instance_name) {
 
@@ -227,7 +212,7 @@ pomng.registry.update = function() {
 							old_instances.splice(idx, 1);
 					}
 
-					pomng.registry.classes[cls.name].available_types = pomng.registry.nameMap(cls.available_types);
+					pomng.registry.classes[cls.name].available_types = cls.available_types;
 					pomng.registry.classes[cls.name].parameters = cls.parameters;
 					pomng.registry.classes[cls.name].performances = cls.performances;
 					pomng.registry.classes[cls.name].serial = cls.serial;
